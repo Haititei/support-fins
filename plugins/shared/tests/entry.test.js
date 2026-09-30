@@ -10,7 +10,7 @@
 //
 //   deno test --allow-read plugins/shared/tests/
 import { computeFins } from '../engine/fins_entry.js';
-import { readSTL, MODELS, analyze, fins, rotX, rotY, assert, assertClose,
+import { readSTL, MODELS, analyze, fins, rotX, rotY, assert, assertClose, block,
          isClosed, insideCount } from '../../../tests/_util.js';
 import { buildTopology, IDENTITY3 } from '../../../web/overhangs.js';
 
@@ -128,4 +128,65 @@ Deno.test('rejects malformed input', () => {
   let threw = false;
   try { computeFins(new Float32Array(10)); } catch { threw = true; }
   assert(threw, 'accepted a soup that is not a multiple of 9');
+});
+
+// ---- sway braces -----------------------------------------------------------
+// The website's braces (web/sway.js) are reachable through the entry point only
+// because `sway` is on the options list it forwards: everything absent from that
+// list is dropped before buildFins ever sees it, which is how the feature shipped
+// on the site and stayed unreachable from every plugin.
+
+/** A tall, slender post as a posed soup -- the case sway braces exist for. */
+function post(h = 150) {
+  const pos = block(-20, 20, -15, 15, 0, h);
+  return Float64Array.from(pos);
+}
+
+Deno.test('sway: off by default -- a host that says nothing gets exactly what it got before', () => {
+  const soup = post();
+  const plain = computeFins(soup, OPTS);
+  const explicit = computeFins(soup, { ...OPTS, sway: null });
+  assert(plain.stats.swayBraces === 0, `braces nobody asked for (${plain.stats.swayBraces})`);
+  assert(plain.triangles.length === explicit.triangles.length, 'sway:null changed the output');
+});
+
+Deno.test('sway: { on: true } braces a tall part, and says so in the stats', () => {
+  const soup = post();
+  const off = computeFins(soup, OPTS);
+  const on = computeFins(soup, { ...OPTS, sway: { on: true } });
+  assert(on.stats.swayBraces >= 2, `expected braces, got ${on.stats.swayBraces} (${on.stats.swayReason})`);
+  assert(on.stats.swayTines > 0, 'braces placed without tines');
+  assert(on.triangles.length > off.triangles.length, 'braces were not added to the geometry');
+  // counted apart from the fins, which serve overhangs and are a different promise
+  assert(on.stats.braces === off.stats.braces, 'brace count leaked into the fin count');
+});
+
+Deno.test('sway: the engine agrees with the website, brace for brace', () => {
+  const soup = post();
+  const topo = topoOf(soup);
+  const web = fins.buildFins(topo, analyze(topo, OPTS.threshold ?? 45, IDENTITY3), IDENTITY3,
+                             { ...OPTS, sway: { on: true } });
+  const got = computeFins(soup, { ...OPTS, sway: { on: true } });
+  assert(got.stats.swayBraces === web.sway.count,
+         `braces ${got.stats.swayBraces} vs the website's ${web.sway.count}`);
+  assert(got.stats.swayTines === web.sway.tines,
+         `brace tines ${got.stats.swayTines} vs the website's ${web.sway.tines}`);
+});
+
+Deno.test('sway: the host\u2019s settings reach the braces', () => {
+  const soup = post();
+  const loose = computeFins(soup, { ...OPTS, sway: { on: true, tineSpacing: 20 } });
+  const tight = computeFins(soup, { ...OPTS, sway: { on: true, tineSpacing: 4 } });
+  assert(tight.stats.swayTines > loose.stats.swayTines,
+         `tine spacing ignored (${tight.stats.swayTines} at 4mm vs ${loose.stats.swayTines} at 20mm)`);
+  const shallow = computeFins(soup, { ...OPTS, sway: { on: true, gripFrom: 120 } });
+  assert(shallow.stats.swayTines < loose.stats.swayTines, '"grip from" ignored');
+});
+
+Deno.test('sway: a part too short to brace reports why, and still builds its fins', () => {
+  const short = Float64Array.from(block(-20, 20, -15, 15, 0, 20));
+  const r = computeFins(short, { ...OPTS, sway: { on: true } });
+  assert(r.stats.swayBraces === 0, `a 20mm part got ${r.stats.swayBraces} braces`);
+  assert(typeof r.stats.swayReason === 'string' && r.stats.swayReason,
+         'no reason given for placing none');
 });

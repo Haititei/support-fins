@@ -26,6 +26,12 @@ export const ENGINE_DEFAULTS = Object.freeze({
   coverage: 0.5,       // website slider default (0..1)
   layerHeight: 0.2,    // overridden with the active Orca preset's layer height
   threshold: DEFAULT_THRESHOLD,
+  // Sway braces (web/sway.js), off by default exactly as on the website. Pass
+  // { on: true } to brace the tall sides, plus any of gripFrom / tineSpacing /
+  // reach / gap / bite to match the host's own settings. Without this a plugin
+  // could not reach the feature at all: the options below are an explicit list,
+  // so anything absent from it never arrives at buildFins.
+  sway: null,
 });
 
 /**
@@ -73,6 +79,9 @@ export function computeFins(positions, options = {}) {
   const built = buildFins(topo, result, IDENTITY3, {
     mode: opts.mode, bedPad: opts.bedPad, tines: opts.tines,
     tineDensity: opts.tineDensity, layerHeight: opts.layerHeight, coverage: opts.coverage,
+    // `sway` is forwarded whole, so a host passes the same object the website's
+    // options panel builds; buildFins ignores it unless `on` is set.
+    sway: opts.sway ?? undefined,
   });
   const fin = flatten(built.triangles);
   const pad = flatten(built.padTriangles || []);
@@ -85,10 +94,22 @@ export function computeFins(positions, options = {}) {
     offset: { x: result.offset.x - cx, y: result.offset.y - cy, z: result.offset.z - z0 },
     stats: {
       overhangRegions: result.regions.length,
+      // Braces, when asked for, are part of this count: the engine appends them
+      // to the same soup, so a host that splits fins from pad here keeps them
+      // with the fins. Separating them per body would need per-brace ranges,
+      // which this entry point does not expose yet.
       finTriangles: fin.length / 9,
       padTriangles: pad.length / 9,
       braces: built.braceCount ?? 0,
       tines: built.tines ?? 0,
+      // Sway braces are counted apart from the fins: they hold a tall part's
+      // sides rather than an overhang, so a readout that merged them would
+      // claim overhangs were served that nothing is under. `swayReason` says
+      // why none were placed, for a host that asked for them and got none.
+      swayBraces: built.sway?.count ?? 0,
+      swayTines: built.sway?.tines ?? 0,
+      swaySkipped: built.sway?.skipped ?? 0,
+      swayReason: built.sway?.reason ?? null,
       unserved: built.unserved ?? null,
       // pieces that start in mid-air (see overhangs.js floatingPieces), with the
       // drop of the first: the plugins' readouts say so, as the site's does
