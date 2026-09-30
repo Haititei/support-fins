@@ -83,6 +83,21 @@ def bbox(soup):
             max(soup[0::3]), max(soup[1::3]), max(soup[2::3]))
 
 
+def tall_post(h=150.0, w=40.0, d=30.0):
+    """A posed 40 x 30 x h mm post: nothing overhangs, so the only support it can
+    get is a sway brace. The soup is a plain box, wound outward."""
+    x0, x1, y0, y1 = -w / 2, w / 2, -d / 2, d / 2
+    v = [(x0, y0, 0.0), (x1, y0, 0.0), (x1, y1, 0.0), (x0, y1, 0.0),
+         (x0, y0, h), (x1, y0, h), (x1, y1, h), (x0, y1, h)]
+    quads = ((0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (2, 3, 7, 6), (1, 2, 6, 5), (3, 0, 4, 7))
+    out = []
+    for a, b, c, dd in quads:
+        for tri in ((v[a], v[b], v[c]), (v[a], v[c], v[dd])):
+            for pt in tri:
+                out += list(pt)
+    return out
+
+
 # ------------------------------------------------------------------ engine host
 @needs_engine
 class EngineHost(unittest.TestCase):
@@ -118,6 +133,35 @@ class EngineHost(unittest.TestCase):
         self.assertGreater(with_pad['padTriangles'], 0)
         self.assertEqual(no_pad['padTriangles'], 0)
         self.assertEqual(no_tines['tines'], 0)
+
+    def test_sway_braces_reach_the_engine_and_come_back_counted(self):
+        # A tall post: nothing overhangs, so anything built here is a brace. The
+        # whole point of the option is that the engine's own allow-lists (Python
+        # DEFAULTS and fins_entry.js) both have to carry `sway`, or it vanishes
+        # quietly somewhere between the dialog and the geometry.
+        post = tall_post(150)
+        off_fins, off = engine_host.compute_fins(post)
+        on_fins, on = engine_host.compute_fins(post, {'sway': {'on': True}})
+        self.assertEqual(on['overhangRegions'], 0, 'a plain post should have no overhangs')
+        self.assertEqual(off['swayBraces'], 0, 'braces nobody asked for')
+        self.assertEqual(len(off_fins), 0)
+        self.assertGreaterEqual(on['swayBraces'], 2, on.get('swayReason'))
+        self.assertGreater(on['swayTines'], 0)
+        self.assertGreater(len(on_fins), 0, 'braces counted but no geometry came back')
+        self.assertAlmostEqual(bbox(on_fins)[2], 0.0, places=4)    # they stand on the bed
+
+    def test_brace_settings_reach_the_engine(self):
+        post = tall_post(150)
+        _, loose = engine_host.compute_fins(post, {'sway': {'on': True, 'tineSpacing': 20}})
+        _, tight = engine_host.compute_fins(post, {'sway': {'on': True, 'tineSpacing': 4}})
+        self.assertGreater(tight['swayTines'], loose['swayTines'])
+        _, high = engine_host.compute_fins(post, {'sway': {'on': True, 'gripFrom': 120}})
+        self.assertLess(high['swayTines'], loose['swayTines'])
+
+    def test_a_part_too_short_to_brace_says_why(self):
+        _, stats = engine_host.compute_fins(tall_post(20), {'sway': {'on': True}})
+        self.assertEqual(stats['swayBraces'], 0)
+        self.assertTrue(stats['swayReason'])
 
     def test_a_part_with_nothing_to_hold_gets_nothing(self):
         cube = posed(read_stl('cube'))
@@ -272,10 +316,20 @@ class HostPlumbing(unittest.TestCase):
                  fin_coverage=120, fin_bed_pad=False, layer_height=0.28)
         o = fins_command.engine_options(s)
         self.assertEqual(o, {'mode': 'prop', 'bedPad': False, 'tines': True, 'tineDensity': 0.4,
-                             'coverage': 1.0, 'layerHeight': 0.28})
+                             'coverage': 1.0, 'layerHeight': 0.28, 'sway': None})
         d = fins_command.engine_options(settings_store.DEFAULTS)
         for k, v in engine_host.DEFAULTS.items():        # untouched dialog == the website
             self.assertEqual(d[k], v, k)
+
+    def test_the_braces_checkbox_turns_the_engine_option_on(self):
+        s = dict(settings_store.DEFAULTS, sway_braces=True, sway_grip_from=15,
+                 sway_tine_spacing=8, sway_depth=20)
+        self.assertEqual(fins_command.engine_options(s)['sway'],
+                         {'on': True, 'gripFrom': 15.0, 'tineSpacing': 8.0, 'reach': 0.2})
+        # ...and the settings are ignored while it is off, so an untouched dialog
+        # sends the website's own defaults whatever is parked in the fields.
+        off = dict(s, sway_braces=False)
+        self.assertIsNone(fins_command.engine_options(off)['sway'])
 
 
 # ------------------------------------------------------------------ mesh reshaping
@@ -377,6 +431,10 @@ def dialog(bed, body=None, **over):
         density=fake_adsk.Slider(s['fin_tine_density']),
         coverage=fake_adsk.Slider(s['fin_coverage']),
         pad=fake_adsk.Val(s['fin_bed_pad']),
+        braces=fake_adsk.Val(s['sway_braces']),
+        sway_from=fake_adsk.Val(s['sway_grip_from'] / 10.0),        # cm, as Fusion stores it
+        sway_spacing=fake_adsk.Val(s['sway_tine_spacing'] / 10.0),
+        sway_depth=fake_adsk.Slider(s['sway_depth']),
     )
 
 

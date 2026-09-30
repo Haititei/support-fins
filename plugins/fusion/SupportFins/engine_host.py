@@ -57,6 +57,10 @@ DEFAULTS = {
     'tineDensity': 0.0,
     'coverage': 0.5,
     'layerHeight': 0.2,
+    # Sway braces, off unless the dialog asks. This list is an allow-list -- the
+    # job below drops anything not in it -- so a key missing here never reaches
+    # the engine however the caller passes it.
+    'sway': None,
 }
 
 # The palette has this long to load and report before the dialog says it can't

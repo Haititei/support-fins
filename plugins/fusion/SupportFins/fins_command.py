@@ -179,6 +179,19 @@ class _CreatedHandler(adsk.core.CommandCreatedEventHandler):
             g.addIntegerSliderCommandInput('coverage', 'Wide-face coverage %', 0, 100, False
                                            ).valueOne = int(s['fin_coverage'])
             g.addBoolValueInput('pad', 'Bed pad', True, '', bool(s['fin_bed_pad']))
+            # Sway braces: a different job from the fins above -- they hold a TALL
+            # part's sides against drift and wobble, not an overhang -- so they get
+            # their own group, and their settings only matter while they are on.
+            sgrp = inputs.addGroupCommandInput('sway', 'Sway braces (tall parts)')
+            sgrp.isExpanded = bool(s['sway_braces'])
+            sg = sgrp.children
+            sg.addBoolValueInput('braces', 'Add sway braces', True, '', bool(s['sway_braces']))
+            sg.addValueInput('sway_from', 'Grip from', 'mm',
+                             adsk.core.ValueInput.createByString('%g mm' % s['sway_grip_from']))
+            sg.addValueInput('sway_spacing', 'Brace tine spacing', 'mm',
+                             adsk.core.ValueInput.createByString('%g mm' % s['sway_tine_spacing']))
+            sg.addIntegerSliderCommandInput('sway_depth', 'Brace depth %', 5, 50, False
+                                            ).valueOne = int(s['sway_depth'])
 
             ro = inputs.addTextBoxCommandInput('readout', '', 'Pick the print bed.'
                                                '<br><i>Support Fins v%s</i>' % VERSION, 7, True)
@@ -206,6 +219,9 @@ def _style(inputs):
 
 def _sync(inputs):
     inputs.itemById('density').isEnabled = inputs.itemById('tines').value
+    on = inputs.itemById('braces').value
+    for i in ('sway_from', 'sway_spacing', 'sway_depth'):
+        inputs.itemById(i).isEnabled = on
 
 
 def _settings(inputs):
@@ -216,6 +232,10 @@ def _settings(inputs):
         'fin_tine_density': inputs.itemById('density').valueOne,
         'fin_coverage': inputs.itemById('coverage').valueOne,
         'fin_bed_pad': inputs.itemById('pad').value,
+        'sway_braces': inputs.itemById('braces').value,
+        'sway_grip_from': round(inputs.itemById('sway_from').value * fb.MM_PER_CM, 4),
+        'sway_tine_spacing': round(inputs.itemById('sway_spacing').value * fb.MM_PER_CM, 4),
+        'sway_depth': inputs.itemById('sway_depth').valueOne,
     }
 
 
@@ -228,6 +248,13 @@ def engine_options(s):
         'tineDensity': max(0, min(100, s['fin_tine_density'])) / 100.0,
         'coverage': max(0, min(100, s['fin_coverage'])) / 100.0,
         'layerHeight': float(s['layer_height']),
+        # Only sent when asked for, so an untouched dialog still matches the
+        # website's own defaults exactly (the engine's `sway` default is null).
+        'sway': ({'on': True,
+                  'gripFrom': max(0.0, float(s['sway_grip_from'])),
+                  'tineSpacing': max(1.0, float(s['sway_tine_spacing'])),
+                  'reach': max(5, min(50, s['sway_depth'])) / 100.0}
+                 if s['sway_braces'] else None),
     }
 
 
@@ -458,13 +485,24 @@ def _finish(ctx, fins, stats):
         why = ('no overhangs need holding in this pose' if not stats.get('overhangRegions')
                else 'the engine placed nothing for the %d overhang region%s'
                % (stats['overhangRegions'], '' if stats['overhangRegions'] == 1 else 's'))
+        # A tall part with no overhangs is the sway braces' own case, so this
+        # path has to say what became of them too rather than only of the fins.
+        if s.get('sway_braces'):
+            why += '; no sway braces either: %s' % (stats.get('swayReason')
+                                                    or 'no upright side takes one in this pose')
         return _result(['<b>No fins</b>: %s.' % why] + lines)
 
     n_fin = sum(1 for g in groups if g.kind == 'fin')
     n_pad = len(groups) - n_fin
     grams = _volume_mm3(fins) / 1000.0 * PLA_DENSITY
-    head = '<b>%d fin%s, %d tines%s, ~%.0f g PLA</b>' % (
+    # Braces are counted apart from the fins: they hold the part's tall sides,
+    # not an overhang, so adding them to the fin count would claim overhangs are
+    # served that nothing is under. They arrive in the same bodies, though.
+    braces = stats.get('swayBraces', 0)
+    head = '<b>%d fin%s, %d tines%s%s, ~%.0f g PLA</b>' % (
         n_fin, '' if n_fin == 1 else 's', stats.get('tines', 0),
+        ' + %d sway brace%s, %d brace tines' % (braces, '' if braces == 1 else 's',
+                                                stats.get('swayTines', 0)) if braces else '',
         ', bed pad' if n_pad else '', grams)
     lines.insert(0, head)
     lines.append('%d overhang region%s, %d triangles.' % (
@@ -484,6 +522,10 @@ def _finish(ctx, fins, stats):
     if stats.get('unserved'):
         lines.append('%d overhang region%s left unsupported (too small or unreachable).'
                      % (stats['unserved'], '' if stats['unserved'] == 1 else 's'))
+    # Asked for braces and got none: say why rather than leave it unexplained.
+    if s.get('sway_braces') and not braces:
+        lines.append('No sway braces: %s.' % (stats.get('swayReason')
+                                              or 'no upright side takes one in this pose'))
     lines.append('Layer height must match your slicer: %g mm.' % s['layer_height'])
     meta = {'layer': s['layer_height'], 'style': s['fin_style'], 'engine': 'printfins.com',
             'addin': VERSION}

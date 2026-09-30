@@ -65,10 +65,16 @@ then **+** next to *My Add-Ins*.
    - Tines on/off, Tine density %
    - Wide-face coverage % (how densely a broad overhang is lined)
    - Bed pad on/off
+   - **Sway braces (tall parts)**, off by default, with Grip from / Brace tine spacing /
+     Brace depth. A different job from the fins above: a tapered rib stands edge-on against a
+     tall side and is tied to it by one-layer tines all the way up, so the part can't drift or
+     wobble as it grows. Nothing needs to overhang — a plain tall post gets braces and no fins.
+     See `docs/FIN-SPEC.md`, "Sway braces (tall parts)".
 4. The readout says *Computing fins…* for a moment after each change, then gives the count of
-   fins and tines, whether there's a bed pad, a rough weight, and anything to check (a piece of
-   the part that isn't joined to the rest, overhangs left unsupported). The preview shows the
-   fins live. Click **Insert** to keep them.
+   fins and tines (and braces, when asked for), whether there's a bed pad, a rough weight, and
+   anything to check (a piece of the part that isn't joined to the rest, overhangs left
+   unsupported, or why no brace could stand). The preview shows the fins live. Click **Insert**
+   to keep them.
 
 The fins go into the **Supports** component (in a Part Design document, beside the part in its
 one component) as **mesh bodies**: one per fin (its wall and the tines that ride on it) and one

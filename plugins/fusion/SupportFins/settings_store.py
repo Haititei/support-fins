@@ -16,6 +16,12 @@ DEFAULTS = {
     'fin_tine_density': 0,   # % (website slider 0..1)
     'fin_coverage': 50,      # % (website slider 0..1)
     'fin_bed_pad': True,
+    # Sway braces (web/sway.js): for a TALL part that drifts or wobbles as it
+    # grows, rather than for an overhang. Off by default, as on the website.
+    'sway_braces': False,
+    'sway_grip_from': 0.0,   # mm up: where the brace tines start (0 = the whole height)
+    'sway_tine_spacing': 6,  # mm between brace tines
+    'sway_depth': 15,        # % of rib height: how far it reaches out at the bed
 }
 
 
