@@ -131,7 +131,7 @@ export function updateDomTranslations() {
     }
   });
 
-  document.querySelectorAll('[data-i18n-title], [title]').forEach((node) => {
+  document.querySelectorAll('[data-i18n-title]').forEach((node) => {
     const explicit = node.getAttribute('data-i18n-title');
     const orig = (node.dataset.origTitle ??= (node.getAttribute('title') || '').trim());
     if (!orig) return;
