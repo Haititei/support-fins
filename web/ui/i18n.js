@@ -15,8 +15,18 @@ function setStoredLang(lang) {
   try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
 }
 
-export let currentLang = getStoredLang() ||
-  (navigator.language && navigator.language.startsWith('de') ? 'de' : 'en');
+// No language picker on the site yet, and the German is still partial, so every
+// visitor gets English. Testers opt in with ?lang=de (remembered; ?lang=en resets).
+// Browser-language detection comes back with the picker.
+function initialLang() {
+  try {
+    const q = new URLSearchParams(location.search).get('lang');
+    if (q) setStoredLang(q);
+  } catch {}
+  return getStoredLang() || 'en';
+}
+
+export let currentLang = initialLang();
 
 if (!SUPPORTED_LANGS[currentLang]) currentLang = 'en';
 
