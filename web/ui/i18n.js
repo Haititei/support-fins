@@ -20,8 +20,8 @@ function setStoredLang(lang) {
 // Browser-language detection comes back with the picker.
 function initialLang() {
   try {
-    const q = new URLSearchParams(location.search).get('lang');
-    if (q) setStoredLang(q);
+    const q = new URLSearchParams(location.search).get('lang')?.trim().toLowerCase().slice(0, 2);
+    if (q && SUPPORTED_LANGS[q]) setStoredLang(q);
   } catch {}
   return getStoredLang() || 'en';
 }
