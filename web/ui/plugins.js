@@ -1,3 +1,31 @@
+
+const PLUGIN_TRANSLATIONS = {
+  'OrcaSlicer': {
+    install: 'Plugins ▸ Plugin installieren, .py-Datei auswählen und aktivieren. Druckeinstellungen ▸ Erweitert ▸ Sonstige ▸ Slicing-Pipeline-Plugin ▸ Plugin hinzufügen ▸ Support Fins. Slicen; Sicherheitsabfragen beim ersten Slicen mit Ja bestätigen.'
+  },
+  'PrusaSlicer': {
+    install: 'Entpacken, com.printfins.support-fins in den lua-Ordner neben PrusaSlicer.ini kopieren, neu starten. Menü Support Fins ▸ Finne hinzufügen: Neigungswinkel anpassen und Finne 0.2 mm unter das Bauteil schieben. Größe über Finnenhöhe anpassen, nicht über das Skalierwerkzeug.'
+  },
+  'Cura': {
+    install: '.curapackage auf Cura ziehen und neu starten. Bauteil auswählen, Erweiterungen ▸ Support Fins ▸ Support Fins hinzufügen.'
+  },
+  'Fusion': {
+    install: 'Entpacken. Dienstprogramme ▸ Zusatzmodule ▸ Skripte und Zusatzmodule ▸ + ▸ Ordner wählen, Ausführen (beim Start ausführen anhaken). Volumenkörper ▸ Erstellen ▸ Support Fins einfügen.'
+  },
+  'Blender': {
+    install: 'Bearbeiten ▸ Einstellungen ▸ Erweiterungen ▸ Aus Datei installieren, Zip wählen. Seitenleiste (N) ▸ Support Fins ▸ Hinzufügen.'
+  },
+  'FreeCAD': {
+    install: 'In den Mod-Ordner des FreeCAD-Benutzerverzeichnisses entpacken (Hilfe ▸ Über FreeCAD zeigt den Pfad) und neu starten. Werkzeugleiste ▸ Support Fins hinzufügen.'
+  },
+  'Onshape': {
+    install: 'Beliebiges Part Studio ▸ Benutzerdefinierte Features ▸ Hinzufügen ▸ Fin Supports Dokument ▸ Support-Fins FS, dann das Bauteil auswählen.'
+  },
+  'Command line': {
+    install: 'node support-fins.mjs part.stl (oder deno run -RW support-fins.mjs part.stl) → part-fins.3mf, Bauteil + Finnen. --help zeigt alle Optionen.'
+  }
+};
+import { t } from './i18n.js';
 // Plugins menu: the topbar's download list for every slicer / CAD plugin.
 //
 // The files are the rolling `plugins-latest` GitHub release, rebuilt by
@@ -67,7 +95,7 @@ const PLUGINS = [
   {
     name: 'Onshape', needs: 'custom feature (its own port of the engine)',
     link: 'https://cad.onshape.com/documents/607917e8e297a68eb42cfb58',
-    linkText: 'Open in Onshape',
+    linkText: t('Open in Onshape'),
     guide: `https://raw.githubusercontent.com/${REPO}/main/plugins/onshape/SupportFins_User_Guide.pdf`,
     install: 'Any Part Studio ▸ Custom features ▸ Add custom features ▸ Fin Supports document ▸ Support-Fins FS, then select the part.',
   },
@@ -144,7 +172,7 @@ function render() {
       go.textContent = p.linkText;
     } else if (file) {
       go.href = DOWNLOAD + file;
-      go.textContent = 'Download';
+      go.textContent = t('Download');
       go.title = file;
     }
     if (go.href) head.append(go);
@@ -160,19 +188,19 @@ function render() {
       guide.href = p.guide;
       guide.target = '_blank';
       guide.rel = 'noopener';
-      guide.textContent = 'Guide (PDF)';   // raw.githubusercontent serves it as a file, so it downloads
+      guide.textContent = t('Guide (PDF)');   // raw.githubusercontent serves it as a file, so it downloads
       head.append(guide);
     }
     const body = document.createElement('div');
     body.className = 'plugin-body';
     const needs = document.createElement('div');
     needs.className = 'plugin-needs';
-    needs.textContent = file === null ? `No build for ${COMPUTERS.find(([k]) => k === c)[1]}` : p.needs;
+    needs.textContent = file === null ? `Kein Build für ${t(COMPUTERS.find(([k]) => k === c)[1])}` : t(p.needs);
     body.append(needs);
     if (p.note) {
       const note = document.createElement('div');
       note.className = 'plugin-note';
-      note.textContent = p.note;
+      note.textContent = t(p.note);
       body.append(note);
     }
     if (label?.engine) {
@@ -184,7 +212,7 @@ function render() {
     if (file !== null) {
       const how = document.createElement('div');
       how.className = 'plugin-how';
-      how.textContent = p.install;
+      how.textContent = (PLUGIN_TRANSLATIONS[p.name]?.install) || t(p.install);
       body.append(how);
     }
     row.append(head, body);
@@ -215,7 +243,7 @@ function setOpen(open) {
   }
 }
 
-for (const [key, text] of COMPUTERS) computer.add(new Option(text, key));
+for (const [key, text] of COMPUTERS) computer.add(new Option(t(text), key));
 computer.addEventListener('change', render);
 let picked = false;
 computer.addEventListener('change', () => { picked = true; }, { once: true });

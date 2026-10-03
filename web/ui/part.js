@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * The part: loading a mesh onto the plate (setPart), re-analysing and shading it
  * in its current pose (shade), the stats panel, the build-volume fit check, and
@@ -223,11 +224,10 @@ export function shade() {
   // loaded, the overhangs on screen are self-inflicted by rotating.
   const flat = el('s-flat-note');
   if (res.regions.length === 0) {
-    flat.textContent = dropped ? 'Nothing big enough for a fin this way up.' : 'No supports needed this way up.';
+    flat.textContent = dropped ? t('Nothing big enough for a fin this way up.') : t('No supports needed this way up.');
     flat.className = 'note good';
   } else if (flatRegions === 0) {
-    flat.textContent = 'This prints clean lying flat. You only need fins if you’re '
-      + 'tilting it for strength.';
+    flat.textContent = t('This prints clean lying flat. You only need fins if you’re tilting it for strength.');
     flat.className = 'note';
   } else {
     flat.textContent = '';

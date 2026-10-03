@@ -1,3 +1,4 @@
+import { t, tn } from './i18n.js';
 /**
  * The status readout: the Fins/Pad rows, the note under them and its (i), the
  * grams receipt, and why a part got no fins.
@@ -213,16 +214,15 @@ function updateDrawReadout(built, ms) {
  */
 function padStatus(built) {
   syncAutoLabel(built);
-  if (!built.pad) return 'not needed';
-  return built.pad.autoSure ? 'Sure hold (small foot)' : 'added';
+  if (!built.pad) return t('not needed');
+  return built.pad.autoSure ? t('Sure hold (small foot)') : t('added');
 }
 // The Auto option names what it built, so the dropdown never claims Light while
 // the pad on screen is Sure hold.
 function syncAutoLabel(built) {
   const opt = el('bed-pad').querySelector('option[value="auto"]');
   const p = built?.pad;
-  opt.textContent = !p || PAD.style !== 'auto' ? 'Auto'
-    : p.style === 'sure' ? 'Auto (Sure hold)' : 'Auto (Light)';
+  opt.textContent = !p || PAD.style !== 'auto' ? t('Auto') : p.style === 'sure' ? t('Auto (Sure hold)') : t('Auto (Light)');
   syncSectionSums();
 }
 function padNote(built) {
@@ -368,7 +368,7 @@ function updateFinReadout(built, ms) {
   }
   // Sway braces were asked for, so say what they did -- and why, if nothing.
   if (sw) {
-    if (!sw.count) lead.push(`no sway braces: ${sw.reason}`);
+    if (!sw.count) lead.push(`${t('no sway braces')}: ${t(sw.reason)}`);
     else {
       help.push('The sway braces stand edge-on against the tall sides and are tied on '
         + 'by tines all the way up, so the top can’t drift or wobble as it prints.');
@@ -384,3 +384,5 @@ function updateFinReadout(built, ms) {
   // never throw, or the updateReceipt() call after this one never happens.
   if (ms != null) el('s-time').textContent = `${analysisTiming} · fins ${ms.toFixed(0)} ms`;
 }
+
+window.addEventListener('languagechange', () => { if (lastBuilt) { syncAutoLabel(lastBuilt); updateReadout(lastBuilt); } });
