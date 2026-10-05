@@ -1,3 +1,4 @@
+import { setLanguage, updateDomTranslations } from "./ui/i18n.js";
 /**
  * Support Fins: the page's entry point. Every feature lives in web/ui/ (one
  * module each: part, pose, settings, finbuild, walls, readout, remove, strength,
@@ -181,3 +182,30 @@ window.__sf = { get part() { return part; }, camera, get topo() { return topolog
 
 const wanted = new URLSearchParams(location.search).get('stl');
 if (wanted) loadURL(wanted).catch((err) => console.error('?stl=', err));
+
+// Language Dropdown Menu
+const langBtn = document.getElementById('lang-btn');
+const langMenu = document.getElementById('lang-menu');
+if (langBtn && langMenu) {
+  langBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = !langMenu.hidden;
+    langMenu.hidden = open;
+    langBtn.setAttribute('aria-expanded', String(!open));
+  });
+  document.addEventListener('click', () => {
+    langMenu.hidden = true;
+    langBtn.setAttribute('aria-expanded', 'false');
+  });
+  document.getElementById('lang-opt-en')?.addEventListener('click', () => {
+    setLanguage('en');
+    langMenu.hidden = true;
+    langBtn.setAttribute('aria-expanded', 'false');
+  });
+  document.getElementById('lang-opt-de')?.addEventListener('click', () => {
+    setLanguage('de');
+    langMenu.hidden = true;
+    langBtn.setAttribute('aria-expanded', 'false');
+  });
+}
+updateDomTranslations();

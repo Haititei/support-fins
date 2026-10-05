@@ -1,4 +1,4 @@
-import { t, tn } from './i18n.js';
+import { t, tn, currentLang } from './i18n.js';
 /**
  * The status readout: the Fins/Pad rows, the note under them and its (i), the
  * grams receipt, and why a part got no fins.
@@ -267,8 +267,8 @@ function updateFinReadout(built, ms) {
     // flat to take a fin. "N fins" alone would hide which is which.
     const p = built.propCount, b = built.braceCount;
     const seg = [];
-    if (b) seg.push(`${b} support fin${b === 1 ? '' : 's'}` + (built.tines ? ` · ${built.tines} tines` : ''));
-    if (p) seg.push(`${p} prop${p === 1 ? '' : 's'}`);
+    if (b) seg.push(tn('{n} support fin', '{n} support fins', b) + (built.tines ? ' · ' + tn('{n} tine', '{n} tines', built.tines) : ''));
+    if (p) seg.push(tn('{n} prop', '{n} props', p));
     autoTxt = seg.join(' + ');
   } else {
     autoTxt = n
@@ -302,7 +302,7 @@ function updateFinReadout(built, ms) {
       const b = built.braceCount, p = built.propCount;
       if (b) {
         help.push(built.tines
-          ? 'The tines grab onto the part and bend away when you snap the supports off.'
+          ? t('The tines grab onto the part and bend away when you snap the supports off.')
           : 'The fins stand a hair off the part (0.2mm) so they pop off. Turn Tines on if you want them to grip.');
       }
       if (p && !b) {
@@ -359,12 +359,18 @@ function updateFinReadout(built, ms) {
             + 'between supports — nudge the slider right if the surface bows');
   }
   if (built.unserved) {
-    // An un-served ledge is a shallow overhang with no room for a prop and too
-    // flat to stand a fin against. The fix (tilt steeper) is a sentence, so it
-    // rides in the (i) rather than the panel.
-    help.push(`${built.unserved} overhang${built.unserved === 1 ? ' is' : 's are'} `
-            + 'too shallow for a fin this way up. Tilt the part steeper so a fin can '
-            + 'follow it (try Suggest orientation), or add a wall by hand.');
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || localStorage.getItem('support_fins_lang') === 'de';
+    const one = built.unserved === 1;
+    if (isDe) {
+      help.push(`${built.unserved} ${one ? 'Überhang ist' : 'Überhänge sind'} `
+              + 'zu flach für eine Finne in dieser Lage. Neigen Sie das Bauteil steiler, '
+              + 'damit eine Finne folgen kann (versuchen Sie „Ausrichtung vorschlagen“), '
+              + 'oder fügen Sie manuell eine Stützwand hinzu.');
+    } else {
+      help.push(`${built.unserved} overhang${one ? ' is' : 's are'} `
+              + 'too shallow for a fin this way up. Tilt the part steeper so a fin can '
+              + 'follow it (try Suggest orientation), or add a wall by hand.');
+    }
   }
   // Sway braces were asked for, so say what they did -- and why, if nothing.
   if (sw) {
@@ -385,4 +391,4 @@ function updateFinReadout(built, ms) {
   if (ms != null) el('s-time').textContent = `${analysisTiming} · fins ${ms.toFixed(0)} ms`;
 }
 
-window.addEventListener('languagechange', () => { if (lastBuilt) { syncAutoLabel(lastBuilt); updateReadout(lastBuilt); } });
+window.addEventListener('languagechange', () => { if (typeof lastBuilt !== "undefined" && lastBuilt) { syncAutoLabel(lastBuilt); updateReadout(lastBuilt); } });

@@ -164,14 +164,22 @@ export function paintOverhangs(res = lastResult) {
   // The slivers keep their own amber swatch, so the amber faces have a name even
   // when this pose has no region the tool supports.
   const sOver = el('s-over');
-  sOver.textContent = res.regions.length === 0
-    ? 'none'
-    : `${res.regions.length} region${res.regions.length === 1 ? '' : 's'}`;
+  const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || localStorage.getItem('support_fins_lang') === 'de';
+  const regCount = res.regions.length;
+  if (regCount === 0) {
+    sOver.textContent = isDe ? 'keine' : 'none';
+  } else {
+    sOver.textContent = isDe
+      ? `${regCount} ${regCount === 1 ? 'Bereich' : 'Bereiche'}`
+      : `${regCount} region${regCount === 1 ? '' : 's'}`;
+  }
   if (dropped) {
     const sw = document.createElement('i');
     sw.className = 'sw sw-small';
-    sw.title = `Amber: overhangs under ${MIN_REGION_AREA} mm², too small for a fin`;
-    sOver.append(' (+', sw, `${dropped} sliver${dropped === 1 ? '' : 's'})`);
+    sw.title = isDe
+      ? `Bernstein: Überhänge unter ${MIN_REGION_AREA} mm², zu klein für eine Finne`
+      : `Amber: overhangs under ${MIN_REGION_AREA} mm², too small for a fin`;
+    sOver.append(' (+', sw, isDe ? ` ${dropped} Splitter)` : `${dropped} sliver${dropped === 1 ? '' : 's'})`);
   }
   sOver.classList.toggle('good', res.regions.length === 0 && !dropped);
 
@@ -185,7 +193,10 @@ export function paintOverhangs(res = lastResult) {
   const warn = el('over-warn');
   if (dropped > 0 && highlightSmall) {
     const one = dropped === 1;
-    warn.textContent = `⚠ ${dropped} overhang${one ? '' : 's'} shaded amber ${one ? 'is' : 'are'} `
+    const deText = `⚠ ${dropped} ${one ? 'Überhang' : 'Überhänge'} in Bernstein ${one ? 'ist' : 'sind'} `
+      + `zu klein für eine Finne (unter ${MIN_REGION_AREA} mm²), ${one ? 'wird' : 'werden'} daher in dieser Lage stützenlos `
+      + `gedruckt und können rau werden. Versuchen Sie „Ausrichtung vorschlagen“, um sie nach oben zu drehen.`;
+    const enText = `⚠ ${dropped} overhang${one ? '' : 's'} shaded amber ${one ? 'is' : 'are'} `
       + `too small for a fin (under ${MIN_REGION_AREA} mm² each), so ${one ? 'it prints' : 'they print'} `
       + `unsupported this way up and may come out rough. Try Suggest orientation to point `
       + `${one ? 'it' : 'them'} up.`;
@@ -340,7 +351,7 @@ export function updateFit() {
   const fit = el('s-fit');
   fit.textContent = over
     ? (added.length ? 'does not fit (with fins)' : 'does not fit')
-    : 'fits';
+    : t('fits');
   fit.classList.toggle('warn', over);
 }
 

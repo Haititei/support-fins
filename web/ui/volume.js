@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * Build volume: the preset/custom select, the remembered choice, and the plate
  * it draws. updateFit() reads the live size through currentVolume().
@@ -68,3 +69,5 @@ for (const inp of customInputs) {
     if (x > 0 && y > 0 && z > 0) { volume = { x, y, z }; applyVolume(); }
   });
 }
+
+window.addEventListener('languagechange', () => { if (typeof updateFit === 'function') updateFit(); });

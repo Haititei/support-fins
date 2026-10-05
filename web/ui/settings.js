@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * The options panel: support mode, the fins / "+ Add" toggles, bed pad style,
  * tines, sway braces, gap, cutouts, material profile, and the collapsible
@@ -40,7 +41,7 @@ export function syncAugmentUI() {
   const show = finsVisible && finMode === 'auto';
   el('augment-toggle').hidden = !show;
   el('augment-toggle').classList.toggle('primary', drawAugment);
-  el('augment-toggle').textContent = drawAugment ? 'Done adding walls' : '+ Add walls by hand';
+  el('augment-toggle').textContent = drawAugment ? t('Done adding walls') : t('+ Add walls by hand');
 }
 
 el('fin-mode').addEventListener('change', (e) => {
@@ -188,7 +189,7 @@ el('material').addEventListener('change', () => {
  *  so undo/redo can re-sync it after restoring the flag. */
 export function syncFinsToggleUI() {
   el('fins-toggle').classList.toggle('primary', finsVisible);
-  el('fins-toggle').textContent = finsVisible ? 'Fins on' : 'Add fins';
+  el('fins-toggle').textContent = finsVisible ? t('Fins on') : t('Add fins');
   el('fin-opts').hidden = !finsVisible;
   syncSectionSums();
 }
@@ -249,7 +250,7 @@ export function syncSectionSums() {
     ? `${el('sway-spacing').value} mm tines · ${el('sway-depth').value}% deep`
       + (el('sway-from').valueAsNumber > 0 ? ` · from ${el('sway-from').value} mm` : '')
     : 'off';
-  el('sum-display').textContent = el('highlight-small').checked ? 'small overhangs highlighted' : 'no highlight';
+  el('sum-display').textContent = el('highlight-small').checked ? t('small overhangs highlighted') : t('no highlight');
 }
 el('fin-opts').addEventListener('input', syncSectionSums);
 el('fin-opts').addEventListener('change', syncSectionSums);
@@ -289,3 +290,5 @@ export function initSettings() {
   CUT.pattern = el('cutout').value;   // a reload can keep the browser's last pick
   applyMaterial(el('material').value);   // sync density + tunables to the initial choice
 }
+
+window.addEventListener('languagechange', () => { if (typeof syncSummaries === "function") syncSectionSums(); el('fins-toggle').textContent = finsVisible ? t('Fins on') : t('Add fins'); el('augment-toggle').textContent = drawAugment ? t('Done adding walls') : t('+ Add walls by hand'); });
