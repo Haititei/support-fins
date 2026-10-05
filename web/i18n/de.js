@@ -1,4 +1,6 @@
 export default {
+  "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps, shrinks the tine bite, and gives the bed pad a gap instead of a bite. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich fester mit Stützen als PLA, daher vergrößert PETG die Abstände, verringert den Eingriff der Zacken und versieht den Stützfuß mit einem Spalt statt Verankerung. PLA behält den festeren Halt.",
+
   "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps and gives the bed pad a gap instead of a tack. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich stärker mit Stützen als PLA, daher vergrößert PETG die Abstände und versieht den Stützfuß mit einem Spalt statt Haftung. PLA behält den festeren Halt.",
   "No build for {name}": "Kein Build für {name}",
 
