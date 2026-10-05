@@ -25,6 +25,13 @@ PR, saying why in its body -- the golden diff is how review sees the default mov
 UPDATE_GOLDEN=1 deno test -A tests/golden.test.js
 ```
 
+**`stability.test.js`** -- the same part nudged by 1e-9 rad builds the same supports,
+on 24 scenes (local issue 023: 14 of them used to change -- an end station dropped one
+ulp off surfaceZAt's grid, a part edge in a wall's end-cap plane read as a pierce, a
+level wall's comb anchored at whichever end noise made lower). Plus the end-cap case on
+`solidClearance` directly, at nudges where the old parallel test misfired. Builds come
+from `_scene.js`, the site's exact call, shared with `golden.test.js`.
+
 **`tines.test.js`** -- `emitTines` on a controlled solid block:
 - teeth **point INTO the part**, flush with the wall's flanks -- never standing
   proud as sideways tabs "laying on" the surface;
@@ -62,6 +69,15 @@ Shapes: curved fixtures `tests/fixtures/{bowl,dome_ceiling,torus_flat}.stl`
   pad is unsupported;
 - added geometry is **watertight**;
 - a tilted part gets a **tined, gripping** fin.
+
+**`low_edge.test.js`** -- a slab whose underside is a shallow cylinder (R 130, 2.2 mm
+of bow) lying on the plate gets a wall at **each edge of its low band** (where the
+underside climbs past the squat floor, ~14.6 mm out) at sparse, default and dense.
+Main put the nearest at 23.4 mm, ~9 mm of near-flat underside bare on each side
+(a customer's DRO housing on its bowed back; at the default coverage one side got
+nothing). The row is added beside the layout, never moved into it, and **no two
+squat brims fuse** -- on the slab, and on a 40 mm cube at X60Z30 sparse, where the
+first version added a squat wall 1.6 mm from the one main builds (review).
 
 **`pad.test.js`** -- the bed pad styles (FIN-SPEC "Bed pad styles"):
 - **Sure hold** is a smooth oval that conforms under a tilted part's flank, stays

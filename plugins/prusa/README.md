@@ -11,7 +11,7 @@ flat directory with a single menu entry:
   runs from a low tip on the plate up to the top of a straight back edge, **0.2 mm under the
   part**, on a thin foot with a round back end. A **comb of tines** runs along the slope: one-layer
   horizontal nubs, one bead (0.5 mm) wide, each top on the print preset's layer grid, that
-  reach across the gap and **0.5 mm into the part** at mid-layer (`PROP.tineBite`), so each prints as one
+  reach across the gap and **0.5 mm into the part** at mid-layer (the site's old `PROP.tineBite`; the site's tines now stop at the surface), so each prints as one
   strand that fuses in and snaps clean (`docs/FIN-SPEC.md`). The top of the slope ends in a
   short flat (1.2 mm, a little more when steep), never a point. Params: **Slope Angle** (20–70°, default 45), **Fin Height**,
   a **Gripping Tines** toggle, and **Tine Spacing** (default 6 mm, the sway braces' printed
@@ -124,8 +124,9 @@ plugin, method bodies for the module); keep it that way.
 
 ## Notes / possible polish
 
-- **Material.** Gap 0.2 / bite 0.5 are the site's PLA defaults (`PROP`). PETG wants bigger gaps
-  and shallower tines; a material choice could come after the bite coupon prints.
+- **Material.** Gap 0.2 is the site's PLA default (`PROP`). PETG wants bigger gaps; a material
+  choice could follow the gap coupon's PETG print. (Tine reach isn't a material setting: tines
+  end at the part's surface.)
 - **Distribution:** optionally PR to
   [leotrax3d/prusaslicer-plugins-unofficial](https://github.com/leotrax3d/prusaslicer-plugins-unofficial)
   for reach + its CI and signing/release workflow, keeping the canonical copy here.

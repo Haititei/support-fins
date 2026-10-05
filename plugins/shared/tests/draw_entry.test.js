@@ -39,7 +39,7 @@ function siteWall(pos, a, b, material = 'pla', layerHeight = 0.2) {
   const res = analyze(topo, 45, IDENTITY3);
   const o = [res.offset.x, res.offset.y, res.offset.z];
   const m = MATERIAL[material];
-  applyTunables({ tineBite: m.tineBite, padH: m.padH, padGrab: m.padGrab, propGap: m.propGap });
+  applyTunables({ padH: m.padH, padGrab: m.padGrab, propGap: m.propGap });
   return drawnWall(add(a, o), add(b, o), moved(pos, o), 0,
     { tines: true, tineDensity: 0, layerHeight, topo, rot: IDENTITY3, offset: res.offset });
 }
@@ -115,7 +115,7 @@ Deno.test('drawWall: the layer height reaches the wall (one-layer tines)', () =>
 
 Deno.test('drawWall says why it can\'t build, in the site\'s words', () => {
   const { pos, a } = tiltedBlock();
-  const r = drawWall(pos, a, add(a, [2, 0, 0]), {});
+  const r = drawWall(pos, a, add(a, [1, 0, 0]), {});   // 1 mm, under DRAW_MIN_LEN
   assert(!r.ok && /too short/.test(r.reason), `expected "too short", got ${JSON.stringify(r)}`);
 });
 

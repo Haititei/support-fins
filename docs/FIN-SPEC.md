@@ -72,6 +72,34 @@ welts.
   66% of contact-line stations take a tine ≤ 1.5 mm, and 13/20 overhang regions have a
   vertical face tall enough to stand a fin against. **That ~65% ceiling is why manual fin
   placement is a core feature, not a fallback.**
+- **Tines kiss the part's surface** (2026-10-02). A tine is placed only where its
+  `tineReach` (0.5) reach lands in the part, but it's built only up to the surface: its
+  end follows the part, measured at each side edge at the tine's bottom and top
+  (`kissEnds`), so on a slope the end leans with the underside and nothing of the tine
+  sits inside the part (+0.01 mm, so the two overlap rather than sit flush). Top and
+  bottom stay flat and one layer apart, so it's still one bead. A slicer unions part
+  and supports in one object, so the buried stretch never printed: bite coupon, main
+  vs kiss, sectioned at every mid-layer: 0 mm2 lost, 0.02 mm2 gained (spots where the
+  0.5 box stopped short of the face). What welds is the part's next layer printing
+  onto the tine (local issue 027).
+- **Draw mode builds smaller walls than Auto** (2026-10-03, local issue 011). A drawn
+  wall needs only **2 mm** of line (`DRAW_MIN_LEN` in `draw.js`; Auto's `minSpan` is 7),
+  because the user is pointing at one small overhang Auto doesn't reach -- a cleat, a
+  fingertip. When neither full-height wall fits (on the part, then on the plate), it
+  falls back to a **squat** wall: on the part down to `minHeightSquat` (0.6 mm) of
+  wall -- in practice the part below must be **just over 1 mm** under the overhang,
+  since `floorLine` skips surfaces within its 1 mm margin -- or on the plate -- only where nothing of the part is under
+  the line -- with its stations under `minHeight` (1.5) as a brimmed squat stem
+  (`sweepSquat`, Auto's near-bed wall, tines from `squatBrimH` up) and any taller run as
+  the full flanged wall. Under 0.6 mm of room it still refuses. The fallback runs only
+  after both full-height walls fail, so every line that built before builds the same.
+- **A low band gets a row at its edge** (2026-10-05). Where a near-flat underside sinks
+  toward the plate (a curved face lying on the bed), no wall fits under the squat floor
+  (0.6 mm wall + gap), and Auto's rows land on a pitch that ignores it. So the edge of
+  that band -- the first row position where a squat wall and its brim clear the part --
+  gets a row when no row that can build stands within a brim width (5 mm) of it
+  (`lowEdges` in `prop/tracks.js`; a row inside the band never builds, so it doesn't count). Added, never moved: moving a row onto the edge lost real walls. Bands
+  under `lowBandMin` (1 mm) are sampling dips, not the plate.
 - **Scale-aware profile.** The prototype's foot/chamfer/tip are fixed, which degenerates
   into a 14 mm splayed sheet when the overhang sits low. Foot width must scale with wall
   height.
@@ -162,6 +190,16 @@ Both prints used the **PLA profile with every setting left at its default** — 
 bite 0.3, tine spacing 6 mm, depth 15%, layer height 0.2 — so the PLA clearances
 release cleanly in ASA too. ASA has no profile of its own yet; two prints isn't enough
 to write one, but it is enough to say the PLA numbers are a safe starting point for it.
+
+**Tines kiss the face (2026-10-03).** Like the walls' tines (#168), a brace tine now ends
+on the part's face (`kissEnds`, web/kiss.js) instead of running the bite (0.3, PETG 0.15)
+into it, and the material's bite is gone: one `SWAY.tineReach` 0.3 only decides where a
+tine goes (the part must be there at half of it). Measured before changing it, on 16
+braced cases (4 real parts, 12 stress shapes), PLA and PETG: brace and tine counts all the
+same, and part + braces merged, sectioned at every mid-layer that changed, identical in
+30 of 32. The two others are one brace on the lighthouse (Y90), where a blocky step puts
+a notch between a tine's two side edges: PLA 0.13 mm2 less tine in it, PETG 0.14 more,
+over 7 layers. The printed numbers above still stand.
 
 | feature | value | rationale |
 |---|---|---|

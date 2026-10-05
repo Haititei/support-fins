@@ -195,7 +195,7 @@ function render() {
     body.className = 'plugin-body';
     const needs = document.createElement('div');
     needs.className = 'plugin-needs';
-    needs.textContent = file === null ? `Kein Build für ${t(COMPUTERS.find(([k]) => k === c)[1])}` : t(p.needs);
+needs.textContent = file === null ? t('No build for {name}', { name: t(COMPUTERS.find(([k]) => k === c)[1]) }) : t(p.needs);
     body.append(needs);
     if (p.note) {
       const note = document.createElement('div');
@@ -212,7 +212,7 @@ function render() {
     if (file !== null) {
       const how = document.createElement('div');
       how.className = 'plugin-how';
-      how.textContent = (PLUGIN_TRANSLATIONS[p.name]?.install) || t(p.install);
+how.textContent = t(p.install);
       body.append(how);
     }
     row.append(head, body);

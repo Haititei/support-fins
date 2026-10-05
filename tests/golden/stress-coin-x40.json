@@ -11,7 +11,7 @@
   "walls": 7,
   "tines": 68,
   "unserved": 0,
-  "triangles": 7640,
+  "triangles": 7660,
   "padTriangles": 1344,
   "fins": [
     {
@@ -64,8 +64,8 @@
     },
     {
       "kind": "prop",
-      "height": 50.394,
-      "length": 59.318,
+      "height": 51.223,
+      "length": 60.306,
       "tines": 0,
       "from": [
         0,
@@ -74,8 +74,8 @@
       ],
       "to": [
         0,
-        31.582,
-        50.394
+        32.57,
+        51.223
       ]
     },
     {
@@ -127,5 +127,5 @@
       ]
     }
   ],
-  "sha256": "9b498034b7d752f6575fd54076d6766c28cb245cb6cc48a1e52795c847a37ce8"
+  "sha256": "1842dfe33a598138bc1683828eb1c2b2f00f43f7a18f28ad53d7826783c761f0"
 }

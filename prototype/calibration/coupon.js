@@ -21,10 +21,12 @@ export const SITE = Object.freeze({
   mode: 'auto', bedPad: true, tines: true, tineDensity: 0, layerHeight: 0.2, coverage: 0.5,
 });
 export const PLA_TUNABLES = Object.freeze({
-  tineBite: MATERIAL.pla.tineBite, padH: MATERIAL.pla.padH, padGrab: MATERIAL.pla.padGrab,
-  propGap: MATERIAL.pla.propGap, wallBite: 0.5, padStyle: 'auto',
+  padH: MATERIAL.pla.padH, padGrab: MATERIAL.pla.padGrab,
+  propGap: MATERIAL.pla.propGap, padStyle: 'auto',
   // PAD.custom's own defaults: what a fresh page sends (style auto never reads them)
   padCustom: { h: 0.5, gap: 0.0, grip: 0.05, margin: 4.0 }, cutout: 'none',
+  // the tine shape knobs' defaults (tine coupon): reset every rung, they persist
+  tinesPerWall: 0,
 });
 
 function readSTL(b) {

@@ -15,8 +15,18 @@ function setStoredLang(lang) {
   try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
 }
 
-export let currentLang = getStoredLang() ||
-  (navigator.language && navigator.language.startsWith('de') ? 'de' : 'en');
+// No language picker on the site yet, and the German is still partial, so every
+// visitor gets English. Testers opt in with ?lang=de (remembered; ?lang=en resets).
+// Browser-language detection comes back with the picker.
+function initialLang() {
+  try {
+    const q = new URLSearchParams(location.search).get('lang')?.trim().toLowerCase().slice(0, 2);
+    if (q && SUPPORTED_LANGS[q]) setStoredLang(q);
+  } catch {}
+  return getStoredLang() || (navigator.language?.startsWith('de') ? 'de' : 'en');
+}
+
+export let currentLang = initialLang();
 
 if (!SUPPORTED_LANGS[currentLang]) currentLang = 'en';
 
@@ -131,7 +141,7 @@ export function updateDomTranslations() {
     }
   });
 
-  document.querySelectorAll('[data-i18n-title], [title]').forEach((node) => {
+  document.querySelectorAll('[data-i18n-title]').forEach((node) => {
     const explicit = node.getAttribute('data-i18n-title');
     const orig = (node.dataset.origTitle ??= (node.getAttribute('title') || '').trim());
     if (!orig) return;

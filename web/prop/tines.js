@@ -7,7 +7,8 @@
  * Split out of prop.js, which re-exports the public names.
  */
 import { insidePart } from '../inside.js';
-import { boxExtrude } from '../solids.js';
+import { kissEnds } from '../kiss.js';
+import { boxExtrude, loftExtrude } from '../solids.js';
 import { PROP } from './config.js';
 
 /** Squared distance from point p to triangle (a,b,c). Ericson closest-point. */
@@ -248,7 +249,7 @@ export function emitTines(line, tris, topo, rot, offset, out, stepArg = PROP.tin
     // nub's full reach to actually land inside the part, or skip it (honest -- no
     // tine gripping air, no tine on a ceiling too shallow to grab sideways).
     const bd = squareToRun(biteDirsAt(topo, rot, offset, x, y, zMid), line, k).find((c) =>
-      insidePart(topo, rot, offset, x + c.x * PROP.tineBite, y + c.y * PROP.tineBite, zMid));
+      insidePart(topo, rot, offset, x + c.x * PROP.tineReach, y + c.y * PROP.tineReach, zMid));
     if (!bd) return false;
     const dirx = bd.x, diry = bd.y;
 
@@ -257,15 +258,13 @@ export function emitTines(line, tris, topo, rot, offset, out, stepArg = PROP.tin
     const base = [x, y, 0];
     const P = (a, b, c) => [base[0] + dirx * a + ax * b,
                             base[1] + diry * a + ay * b, c];
-    // rectangle in (along, across): from -overlap (into the wall) to +bite; a
-    // 'point' tip keeps the full width back to the seed and tapers from there to
-    // the bite (convex, so boxExtrude's fan caps stay valid)
-    const poly = PROP.tineTip === 'point'
-      ? [[-PROP.tineOverlap, -half], [0, -half], [PROP.tineBite, 0],
-         [0, half], [-PROP.tineOverlap, half]]
-      : [[-PROP.tineOverlap, -half], [PROP.tineBite, -half],
-         [PROP.tineBite, half], [-PROP.tineOverlap, half]];
-    boxExtrude(poly, tineBot, tineTop, P, out);
+    // quad in (along, across): from -overlap (into the wall) to where the tine meets
+    // the part, its end leaning with the surface between bottom and top (kissEnds).
+    const e = kissEnds(topo, rot, offset, x, y, dirx, diry, tineBot, tineTop,
+                       { half, back: PROP.tineOverlap, reach: PROP.tineReach });
+    const ov = -PROP.tineOverlap;
+    const outline = (h) => [[ov, -half], [e[h][0], -half], [e[h][1], half], [ov, half]];
+    loftExtrude(outline('bot'), outline('top'), tineBot, tineTop, P, out);
     if (grip && tineBot < grip.z) grip.z = tineBot;
     // WALL STEP. The tine is snapped to the part's layer, the wall top isn't, so
     // the tine can start above the wall: up to half a layer when the gap is one
@@ -319,7 +318,10 @@ export function emitTines(line, tris, topo, rot, offset, out, stepArg = PROP.tin
   // sparsest setting: edge-bias must not compound with a user who already dialed
   // grip to light and starve the comb to a few scattered nubs.
   const S = s[s.length - 1];
-  const lowFirst = line[0][2] <= line[line.length - 1][2];
+  // Ends level to within float noise (a symmetric part: sphere walls end at the same
+  // z) keep the line's own order, rather than let a 1e-9 nudge pick which end anchors
+  // the comb (local issue 023: sphere 18 -> 17 tines, the mirrored comb lost one).
+  const lowFirst = line[0][2] <= line[line.length - 1][2] + 1e-6;
   const at = (u) => place((lowFirst ? u : S - u) - s0);   // u = arc length from the LOW end
   const band = Math.min(PROP.tineEdgeBand, S / 2);
   const midStep = PROP.tinesPerWall > 0 ? step     // an exact count: even, no edge bias

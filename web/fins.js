@@ -77,20 +77,11 @@ function coverPitch(coverage) {
 export function applyTunables(t) {
   if (!t) return;
   const set = (obj, key, v) => { if (Number.isFinite(v)) obj[key] = v; };
-  set(FIN, 'tineBite', t.tineBite);
   set(FIN, 'padH', t.padH);
   set(PAD, 'grab', t.padGrab);
   if (['auto', 'light', 'sure', 'custom'].includes(t.padStyle)) PAD.style = t.padStyle;
   if (t.padCustom) for (const k of Object.keys(PAD.custom)) set(PAD.custom, k, t.padCustom[k]);
   set(PROP, 'gap', t.propGap);
-  // The walls' tines (prop/tines.js); calibration only (the bite coupon). Not t.tineBite:
-  // that is FIN.tineBite, the material's, which only the sway braces read.
-  set(PROP, 'tineBite', t.wallBite);
-  // Tine shape, the tine coupon's knobs (no site field yet): width across the run
-  // and the plan-view tip. Calibration only until a print picks them.
-  // A width under 0.1 would fold the tine and its wall step (inset 0.01 a side) inside out.
-  if (t.tineWidth >= 0.1) PROP.tineW = t.tineWidth;
-  if (['square', 'point'].includes(t.tineTip)) PROP.tineTip = t.tineTip;
   // Tines per wall, exact (0 = off, the spacing rules decide): the tine coupon asks
   // how few still hold. Calibration only.
   if (Number.isInteger(t.tinesPerWall) && t.tinesPerWall >= 0) PROP.tinesPerWall = t.tinesPerWall;

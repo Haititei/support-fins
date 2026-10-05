@@ -1,4 +1,7 @@
 export default {
+  "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps and gives the bed pad a gap instead of a tack. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich stärker mit Stützen als PLA, daher vergrößert PETG die Abstände und versieht den Stützfuß mit einem Spalt statt Haftung. PLA behält den festeren Halt.",
+  "No build for {name}": "Kein Build für {name}",
+
   "Pad thickness mm": "Stützfußdicke mm",
   "Pad gap mm": "Stützfußabstand mm",
   "Pad grip mm": "Stützfußhaftung mm",
