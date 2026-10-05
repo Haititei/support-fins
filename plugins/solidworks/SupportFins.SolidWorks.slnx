@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="SupportFins.SolidWorks/SupportFins.SolidWorks.csproj" Id="222f52b0-ee02-4c1e-b395-35bc592e60af">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
