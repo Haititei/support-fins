@@ -44,6 +44,7 @@ Tines off, 2 = the slider all the way left (light, the default), 3 = the middle,
 snapping anything off, check that every wall is still standing. Then snap the walls
 off and look at each ramp's underside.
 - A wall leaned or came loose → too few tines for your printer: go one step right.
+  If even the firm walls leaned, keep firm and tell us: that's more grip than the slider gives.
 - Ramp marked or torn where the tines were → more grip than you need: go one step left.
 - Use the **lightest setting whose walls all held**. If even Tines off held, your
   parts may not need tines on gentle slopes, but a tall or tippy part still does.
