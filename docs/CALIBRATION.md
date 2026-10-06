@@ -38,9 +38,9 @@ each wall off.
   field stops at 0.4 for now: if only 3 layers came clean, tell us).
 
 ## Grip (`grip/print/grip-coupon.3mf`)
-Four ramps, three walls under each, built at four **Tine grip** settings: 1 dot =
-Tines off, 2 = the slider all the way left (light, the default), 3 = the middle,
-4 = all the way right (firm). That's 0, 5, 7 and 11 tines on each wall. Before
+Four ramps, three walls under each, built at four **Tine grip** settings, each
+written on top of its ramp: **OFF** = Tines off, **LIGHT** = the slider all the way
+left (the default), **MID** = the middle, **FIRM** = all the way right. That's 0, 5, 7 and 11 tines on each wall. Before
 snapping anything off, check that every wall is still standing. Then snap the walls
 off and look at each ramp's underside.
 - A wall leaned or came loose → too few tines for your printer: go one step right.

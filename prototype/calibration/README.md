@@ -160,8 +160,8 @@ Replaced by tine/ (local issue 027).
 ### grip/ -- what does the Tine grip slider do on a print? (Tines > Tine grip)
 The user-facing tine coupon. Bar on the plate, four 32 mm wide 30 deg ledges rising
 14 mm (24 mm out), the site's Auto build per ledge, three walls each, every wall 23 mm
-up the ramp. Ledge k carries k dots: 1 Tines off, 2 light (slider left, the default),
-3 middle, 4 firm (right) -> 0 / 5 / 7 / 11 tines a wall (build.js checks every wall
+up the ramp. Each ledge has its setting raised on top (coupon.py label(), no dots):
+OFF, LIGHT (slider left, the default), MID, FIRM (right) -> 0 / 5 / 7 / 11 tines a wall (build.js checks every wall
 in a ledge got the same count). For a user: the lightest setting whose walls held
 and whose ledge printed clean; marks get worse to the right.
 Why 30 deg and this long: every wall gets at least 3 tines (`PROP.minGripTines`), and
