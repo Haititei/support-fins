@@ -13,6 +13,7 @@ supports are already in the file (and the angle test needs none). Files are in
 |---|---|---|
 | Angle | which faces need support | Overhang slider (top bar) |
 | Gap | how close walls stand to the part | Clearances ▸ Support gap |
+| Grip | how many tines hold each wall | Tines ▸ Tine grip |
 | Span | how wide a bare stretch your printer bridges (tells us, for now) | Walls ▸ Wide-face coverage (Auto) |
 | Pad | how the bed pad lets go | Clearances ▸ Bed pad ▸ Custom ▸ Pad gap |
 | Bore | whether holes pull clean (no setting: tells us) | — |
@@ -35,6 +36,17 @@ each wall off.
 - Ledge underside saggy or stringy → gap too big.
 - Use the **fewest layers that snap off clean**, times 0.2, in **Support gap** (the
   field stops at 0.4 for now: if only 3 layers came clean, tell us).
+
+## Grip (`grip/print/grip-coupon.3mf`)
+Four ramps, three walls under each, built at four **Tine grip** settings: 1 dot =
+Tines off, 2 = the slider all the way left (light, the default), 3 = the middle,
+4 = all the way right (firm). That's 0, 5, 7 and 11 tines on each wall. Before
+snapping anything off, check that every wall is still standing. Then snap the walls
+off and look at each ramp's underside.
+- A wall leaned or came loose → too few tines for your printer: go one step right.
+- Ramp marked or torn where the tines were → more grip than you need: go one step left.
+- Use the **lightest setting whose walls all held**. If even Tines off held, your
+  parts may not need tines on gentle slopes, but a tall or tippy part still does.
 
 ## Span (`span/print/span-coupon.3mf`)
 Five wide shelves, built at five **Wide-face coverage** slider positions (1–5 dots):

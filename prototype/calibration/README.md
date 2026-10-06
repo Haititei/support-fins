@@ -8,7 +8,7 @@ actually makes (tine/ also adds its KISS tines as a second object, on purpose):
     python3 prototype/calibration/<name>/gen.py      # the part -> out/coupon_part.stl
     deno run -A prototype/calibration/<name>/build.js  # walls on it -> out/<name>-coupon.3mf
 
-The user-facing coupons (angle, gap, tine, span, pad, bore) share `coupon.py` (boxes, rung
+The user-facing coupons (angle, gap, grip, span, pad, bore) share `coupon.py` (boxes, rung
 dots, the one-piece check) and `coupon.js` (the site's own call -- `analyze(topo, 45,
 rot)` then `buildFins(..., {mode: 'auto', bedPad: true})` at the site's PLA defaults --
 run once per rung with that rung's setting, keeping the support PIECES -- whole
@@ -156,6 +156,21 @@ part's next layer prints straight onto the tine; the slicer merges part and supp
 (one object), so the reach changes nothing. Bite is not a user setting any more (field
 removed in #167; tines end at the part's surface in #168), so the coupon went too.
 Replaced by tine/ (local issue 027).
+
+### grip/ -- what does the Tine grip slider do on a print? (Tines > Tine grip)
+The user-facing tine coupon. Bar on the plate, four 32 mm wide 30 deg ledges rising
+14 mm (24 mm out), the site's Auto build per ledge, three walls each, every wall 23 mm
+up the ramp. Ledge k carries k dots: 1 Tines off, 2 light (slider left, the default),
+3 middle, 4 firm (right) -> 0 / 5 / 7 / 11 tines a wall (build.js checks every wall
+in a ledge got the same count). For a user: the lightest setting whose walls held
+and whose ledge printed clean; marks get worse to the right.
+Why 30 deg and this long: every wall gets at least 3 tines (`PROP.minGripTines`), and
+the slider runs 5 -> 2 mm between them, so on a short wall it does nothing. The tine
+coupon's 6 mm walls got 3 tines at both ends of the slider. A 30 deg ramp gives a long
+wall at a low height.
+Found building it: a main-pass wall's `built.fins[i].tines` reads 0 even when it has
+tines (`built.props[i].tines` is right), so build.js counts from props.
+- **waiting on print.**
 
 ### tine/ -- does a separate-object (KISS) tine leave a fainter mark, or is it just fewer tines?
 **v2 (current).** Bar on the plate with fifteen 40 deg ledges, 8 on the near side
