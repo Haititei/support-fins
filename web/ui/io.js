@@ -10,7 +10,28 @@ import { isStep, readStep, warmStep } from '../step.js';
 import { el } from './dom.js';
 import { part, setPart } from './part.js';
 
-export let importNote = '';   // what the 3MF/STEP reader had to decide (merge, unit, skips)
+export let importNote = '';
+export let lastImportMeta = null;
+
+export function renderImportNote() {
+  if (!lastImportMeta) return '';
+  const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
+  const m = lastImportMeta;
+  const notes = [];
+  if (m.type === '3MF') {
+    if (m.objectsLength > 1) {
+      notes.push(m.chosenLength === 1
+        ? (isDe ? `„${m.chosenName}“ von ${m.objectsLength} Objekten importiert` : `imported “${m.chosenName}” of ${m.objectsLength} objects`)
+        : (isDe ? `${m.chosenLength} von ${m.objectsLength} Objekten zu einem Bauteil zusammengeführt` : `merged ${m.chosenLength} of ${m.objectsLength} objects into one part`));
+    } else if (m.meshes > 1) {
+      notes.push(isDe ? `${m.meshes} Körper zu einem Bauteil zusammengeführt` : `merged ${m.meshes} bodies into one part`);
+    }
+    if (m.skipped) notes.push(isDe ? `${m.skipped} Stütz-/nicht druckbare(n) Körper ignoriert` : `ignored ${m.skipped} support/non-printable ${m.skipped === 1 ? 'body' : 'bodies'}`);
+    if (m.unit && m.unit !== 'millimeter') notes.push(isDe ? `von ${m.unit} nach mm konvertiert` : `converted from ${m.unit} to mm`);
+    return notes.length ? `3MF: ${notes.join('; ')}.` : '';
+  }
+  return importNote;
+}   // what the 3MF/STEP reader had to decide (merge, unit, skips)
 
 const loader = new STLLoader();
 
@@ -149,7 +170,16 @@ async function parseModel(buffer) {
   }
   if (skipped) notes.push(isDe ? `${skipped} Stütz-/nicht druckbare(n) Körper ignoriert` : `ignored ${skipped} support/non-printable ${skipped === 1 ? 'body' : 'bodies'}`);
   if (unit && unit !== 'millimeter') notes.push(isDe ? `von ${unit} nach mm konvertiert` : `converted from ${unit} to mm`);
-  importNote = notes.length ? `3MF: ${notes.join('; ')}.` : '';
+  lastImportMeta = {
+    type: '3MF',
+    objectsLength: objects.length,
+    chosenLength: chosen.length,
+    chosenName: chosen[0]?.name,
+    meshes: chosen[0]?.meshes ?? 1,
+    skipped,
+    unit
+  };
+  importNote = renderImportNote();
 
   return geometry;
 }

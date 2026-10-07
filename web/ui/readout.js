@@ -124,7 +124,12 @@ function updateReceipt() {
 }
 
 /** Route the readout to the active mode. */
+let lastBuilt = null;
+let lastMs = null;
+
 export function updateReadout(built, ms) {
+  lastBuilt = built;
+  if (ms != null) lastMs = ms;
   if (finMode === 'draw') updateDrawReadout(built, ms);
   else updateFinReadout(built, ms);
   updateReceipt();
@@ -423,4 +428,4 @@ function updateFinReadout(built, ms) {
   if (ms != null) el('s-time').textContent = `${analysisTiming} · fins ${ms.toFixed(0)} ms`;
 }
 
-window.addEventListener('languagechange', () => { if (typeof lastBuilt !== "undefined" && lastBuilt) { syncAutoLabel(lastBuilt); updateReadout(lastBuilt); } });
+window.addEventListener('languagechange', () => { if (lastBuilt) { syncAutoLabel(lastBuilt); updateReadout(lastBuilt, lastMs); } });

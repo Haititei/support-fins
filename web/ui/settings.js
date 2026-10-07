@@ -308,4 +308,4 @@ export function initSettings() {
   applyMaterial(el('material').value);   // sync density + tunables to the initial choice
 }
 
-window.addEventListener('languagechange', () => { if (typeof syncSummaries === "function") syncSectionSums(); el('fins-toggle').textContent = finsVisible ? t('Fins on') : t('Add fins'); el('augment-toggle').textContent = drawAugment ? t('Done adding walls') : t('+ Add walls by hand'); });
+window.addEventListener('languagechange', () => { if (typeof syncSectionSums === "function") syncSectionSums(); el('fins-toggle').textContent = finsVisible ? t('Fins on') : t('Add fins'); el('augment-toggle').textContent = drawAugment ? t('Done adding walls') : t('+ Add walls by hand'); });

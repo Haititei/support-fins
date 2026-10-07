@@ -10,7 +10,7 @@ import { el } from './dom.js';
 import { scene, controls, frame } from './scene.js';
 import { removeMode, cancelRemove, resetRemovals } from './remove.js';
 import { resetHistory } from './history.js';
-import { importNote } from './io.js';
+import { importNote, renderImportNote } from './io.js';
 import { currentVolume } from './volume.js';
 import { resetLoad, updateLayerView, updateLoadReadout, syncLoadUI } from './strength.js';
 import { hideSuggestions } from './suggest.js';
@@ -160,6 +160,7 @@ export function paintOverhangs(res = lastResult) {
   }
   colors.needsUpdate = true;
 
+  lastShadeRes = res;
   const dropped = res.rawRegionCount - res.regions.length;
   // The slivers keep their own amber swatch, so the amber faces have a name even
   // when this pose has no region the tool supports.
@@ -365,3 +366,35 @@ thrInput.addEventListener('input', () => {
   computeFlatBaseline();   // the flat baseline moves with the overhang threshold
   shade();
 });
+
+let lastShadeRes = null;
+
+export function syncPartLanguage() {
+  updateFit();
+  if (typeof renderImportNote === 'function') {
+    const note = renderImportNote();
+    if (note) el('s-import-note').textContent = note;
+  }
+  if (!lastShadeRes) return;
+  const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
+  const dropped = lastShadeRes.rawRegionCount - lastShadeRes.regions.length;
+  const regCount = lastShadeRes.regions.length;
+  const sOver = el('s-over');
+  if (regCount === 0) {
+    sOver.textContent = isDe ? 'keine' : 'none';
+  } else {
+    sOver.textContent = isDe
+      ? `${regCount} ${regCount === 1 ? 'Bereich' : 'Bereiche'}`
+      : `${regCount} region${regCount === 1 ? '' : 's'}`;
+  }
+  if (dropped) {
+    const sw = document.createElement('i');
+    sw.className = 'sw sw-small';
+    sw.title = isDe
+      ? `Bernstein: Überhänge unter ${MIN_REGION_AREA} mm², zu klein für eine Finne`
+      : `Amber: overhangs under ${MIN_REGION_AREA} mm², too small for a fin`;
+    sOver.append(' (+', sw, isDe ? ` ${dropped} Splitter)` : `${dropped} sliver${dropped === 1 ? '' : 's'})`);
+  }
+}
+
+window.addEventListener('languagechange', syncPartLanguage);
