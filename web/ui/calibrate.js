@@ -155,3 +155,9 @@ document.addEventListener('pointerdown', (e) => {
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !panel.hidden) { setOpen(false); btn.focus(); }
 });
+
+window.addEventListener('languagechange', () => {
+  document.querySelectorAll('#calibrate-list .btn').forEach((b) => {
+    b.textContent = t('Download');
+  });
+});

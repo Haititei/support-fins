@@ -65,12 +65,12 @@
   <span class="calibrate-wrap">
     <button class="btn" id="calibrate" aria-haspopup="dialog" aria-expanded="false"
             aria-controls="calibrate-menu"
-            title="Test prints that tune the settings to your printer and filament.">Calibrate&nbsp;▾</button>
+            data-i18n-title="Test prints that tune the settings to your printer and filament." data-i18n="Calibrate ▾" title="Test prints that tune the settings to your printer and filament.">Calibrate&nbsp;▾</button>
     <div class="menu plugins-panel" id="calibrate-menu" role="dialog" aria-label="Calibration prints" hidden>
-      <p class="calibrate-intro">Print each with your usual profile and slicer supports off; the supports are in the file. Each sets one setting.</p>
+      <p class="calibrate-intro" data-i18n="Print each with your usual profile and slicer supports off; the supports are in the file. Each sets one setting.">Print each with your usual profile and slicer supports off; the supports are in the file. Each sets one setting.</p>
       <div id="calibrate-list"></div>
       <p class="plugins-foot"><span id="calibrate-profile"></span>
-        <a id="calibrate-guide" target="_blank" rel="noopener">Full guide</a></p>
+        <a id="calibrate-guide" target="_blank" rel="noopener" data-i18n="Full guide">Full guide</a></p>
     </div>
   </span>
   <!-- Plugin downloads (web/ui/plugins.js): every slicer / CAD plugin from the
@@ -285,7 +285,7 @@
     <label data-i18n-title class="fld row" title="A tilted part rests on an edge and peels off the plate without a pad. Auto: Light, or Sure hold when the part meets the plate on a point or a small round foot (it shows which). Light: one layer, 0.12mm off the part, peels off like a brim. Sure hold: thicker and tacked into the part, holds harder but is harder to remove. Custom: set every number yourself.">
       <span data-i18n="Bed pad">Bed pad</span><select id="bed-pad">
         <option value="off" data-i18n="Off">Off</option>
-        <option value="auto" data-i18n="Auto — place supports for me">Auto — place supports for me</option>
+        <option value="auto" data-i18n="Auto">Auto</option>
         <option value="light" data-i18n="Light">Light</option>
         <option value="sure" data-i18n="Sure hold">Sure hold</option>
         <option value="custom" data-i18n="Custom">Custom</option>
