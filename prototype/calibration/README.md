@@ -21,10 +21,20 @@ supports are checked closed before they're written).
 coupon's KISS object stays in register with its coupon, so never Arrange it). What a user does with
 each one is `docs/CALIBRATION.md`.
 
+The site's Calibrate menu (`web/ui/calibrate.js`) serves the user-facing coupons'
+print files from `web/calibration/`. After changing any of them, run
+`python3 prototype/calibration/estimate.py`: it copies them there and slices each with
+PrusaSlicer's command line for the time and filament the menu shows
+(`web/calibration/coupons.json`). `tests/calibrate.test.js` fails if a copy is stale.
+
 `out/` is git-ignored. The files actually printed are committed in `<name>/print/`
-(.3mf with the part and walls as two parts of ONE object -- a slicer unions them, as it
-does the site's 3MF -- one merged .stl, a render), so a
-coupon can be reprinted as-is even after the engine moves on. Record each print's result below, with the date and the
+(.3mf, one merged .stl, a render), so a coupon can be reprinted as-is even after the
+engine moves on. The .3mf has the part and supports as TWO objects in register, as the
+site's Export > 3MF writes them since #199 (the slicer keeps them apart, so a tine only
+touches the part); never Arrange them apart. Files printed before that were one object;
+`separate.py` converted gap, grip, pad, span and lip in place on 2026-10-07 with their
+meshes unchanged (slender, foot, orient keep the one-object form they were printed in;
+tine/ has its own split). Record each print's result below, with the date and the
 setting it decided; the number itself goes in `web/prop/config.js` with a pointer here.
 
 ## Coupons
@@ -121,7 +131,10 @@ For a user: compare each pair (does direction matter?) and down each side (how
 close do walls need to be for an underside you'd keep?). If ACROSS wins, a wall
 direction rule (cross the slicer's bridge) is worth building; the spacing that
 looks good sets the Coverage dial's target (span/).
-- **waiting on print.**
+- **2026-10-07, PLA:** ACROSS beat PARALLEL at every spacing; within each side the
+  three spacings looked about the same. So direction matters and spacing (8 down to
+  4 mm) doesn't: a wall direction rule (cross the slicer's bridge) is worth building
+  (not built), and this sets no Coverage target.
 
 ### span/ -- how far apart may walls under a broad face sit? (the Coverage dial)
 Bar on the plate, five identical 30 x 24 mm flat shelves 10 mm up; Auto per shelf
@@ -162,12 +175,67 @@ loose is a result. The 3MF is re-packed deflated (the brim mesh is ~64k triangle
 local issue 007); no merged STL in `print/`.
 - **waiting on print.**
 
-### bore/ -- do walls inside a sideways hole pull out clean, and from what size?
-Block on the plate with through-bores along y, 1: 3, 2: 5, 3: 8, 4: 12 mm across,
-centred 9 mm up. One Auto build at the defaults (nothing varied): one wall along each
-bore's axis, inside the bore, running out the open end; 0 unserved. Checks the
-2026-09-27 reversal (bores DO get supported) on a printed part.
+### cutout/ -- what does each Cutouts style do to a tall wall? (Walls > Cutouts, CUT.pattern)
+Bar on the plate, five identical 28 x 14 mm flat ledges 25 mm up (three near side,
+two far); the site's Auto build per ledge with Cutouts 1: none, 2: diamond,
+3: triangle, 4: arch, 5: lattice (style raised on top). Tall on purpose: cutouts open
+only a wall's middle, and a short wall stays solid. Two walls a ledge. Support volume
+per ledge (build.js; a cut wall's overlapping solids read a little high): none 1572,
+diamond 1230 (78 %), triangle 1230 (78 %), arch 1043 (66 %), lattice 1048 (67 %) mm3.
+For a user: the most open style whose walls stood, held their ledge flat and snapped
+off whole. Built for the Calibrate menu; also shows the Lattice style off.
+Found building it: a cut wall's solids share edges (4 or 6 triangles to an edge), which
+coupon.js's closed check refused; it now checks every directed edge has its reverse
+(closed, consistently wound bodies). Most of those shared edges are FLUSH, not
+overlapping -- web/cutout.js stacks slab pieces that meet exactly at their boundary
+(CUT.eps grows pieces only across the strip sides and into the bands). Already on
+main; it breaks the overlap-never-flush rule, so it's a follow-up.
 - **waiting on print.**
+
+### bore/ -- do walls inside a sideways hole pull out clean, from what size, and which way?
+Block on the plate with eight through-bores along y, two sets of 3 / 5 / 8 / 12 mm,
+centred 9 mm up; each has its size raised at the front and its set's letter at the back.
+- **A** (bores 1-4, ALONG): the site's Auto build at the defaults, one wall along each
+  bore's axis, running out the open end; 0 unserved. Checks the 2026-09-27 reversal
+  (bores DO get supported) on a printed part.
+- **X** (bores 5-8, ACROSS, added 2026-10-07 on Matthew's ask): the same bores with the
+  walls turned 90 deg -- three Draw walls (drawnWall) across each bore at y -6 / 0 / 6,
+  spanning 80 % of its width, standing on the bore's floor (foot gap) with tines at its
+  ceiling: 2.4 x 2.7, 4.0 x 4.8, 6.4 x 7.7, 9.6 x 11.8 mm (length x height). Shaped to
+  the bore's cross-section, a cross wall can still slide out along the bore; it may come
+  out easier, and the orient coupon found walls across the slicer's bridge lines beat
+  walls along them. Nothing touches the part (checked: 0 mm3 overlap).
+For a user: pull every wall out an open end; note per bore clean / broke / stuck, and
+whether A or X left the better ceiling. If X wins, a bore's wall direction is worth
+changing in the engine.
+- **v1 (A only): waiting on print; not printed.** Replaced by this build.
+- **waiting on print.**
+
+### sampler/ -- one part with every hard shape, as the site supports it (no setting)
+Not a rung coupon: a showcase that sets nothing. A spine on the plate with, front:
+40 / 30 / 20 deg ramps rising 10 mm (angle raised on top), a 20 mm ball, a 2 mm
+ledge 18 mm out and 24 mm up; back: a table (28 mm flat bridge between its legs, 14 up), a 26 mm
+mushroom cap on a 5 mm stem, a cave (18 x 14 flat ceiling); through the spine:
+3 / 6 / 12 mm sideways holes (size raised above each); on the end: an arch tunnel.
+One build in Full coverage (mode 'full') at every other default, all supports kept.
+Every feature is big enough for real walls (10-26 mm long), so the print shows
+whether each kind snaps off clean. A point-down tip in the first draft was dropped
+(Matthew: a mess, tells us nothing).
+- **2026-10-06, PLA (Matthew), the FIRST draft** (3-8 mm stubs, a point-down cone, one
+  locked object): mostly bad -- spaghetti under the ball, mushroom cap, table and cone (too
+  little support there), prominent tine marks; the holes looked okay. -> walls made real
+  (bigger features), the cone dropped, supports exported as their own object.
+- **Current build:** 44 walls (22 from the fill pass), must-hold 100 % (coverage scoreboard).
+  `print/sampler-coupon.3mf` = supports as their own object (the site's Export > 3MF since
+  #199).
+  Expected weak spot: the table. PrusaSlicer bridges its underside at 0 deg (leg to leg)
+  and Auto's flat-face walls run the same way -- parallel, which the orient coupon showed
+  is junk (local wall-direction rule, still to build).
+- **2026-10-07, PLA (Matthew), the current build:** pretty solid. The ball has a few
+  drooping layers; the table's underside isn't perfect nearer the spine. Everything
+  else printed well. The table was the expected weak spot (walls parallel to the
+  bridge). It's in the site's Calibrate menu as the last print: what to expect once
+  the others are tuned.
 
 ### bite/ -- RETIRED 2026-10-03 (files removed; last in git at 6ec7c16)
 Asked how far tines should reach into the part (the old Tine bite field): twelve 40 deg

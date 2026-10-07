@@ -95,29 +95,36 @@ export function keep(c, verts, [x0, x1, y0, y1]) {
   return kept;
 }
 
-/** Throws unless every edge of the vertex list is shared by exactly two triangles
- *  (closed bodies: what a slicer needs, and what the site exports). */
+/** Throws unless every directed edge a->b is matched by as many b->a: closed,
+ *  consistently wound bodies, what a slicer needs and what the site exports. Not
+ *  "every edge used exactly twice": a cut wall (Walls > Cutouts) is several closed
+ *  solids -- bands, posts, cells, stacked slabs -- that share edges (4 or 6 uses).
+ *  A hole leaves an edge unmatched, and so does a flipped body. */
 export function assertClosed(verts, what) {
   const edges = new Map();
-  const key = (a, b) => { const s = `${a}`, t = `${b}`; return s < t ? `${s}|${t}` : `${t}|${s}`; };
   for (let i = 0; i < verts.length; i += 3) {
     for (let k = 0; k < 3; k++) {
-      const e = key(verts[i + k], verts[i + (k + 1) % 3]);
+      const e = `${verts[i + k]}|${verts[i + (k + 1) % 3]}`;
       edges.set(e, (edges.get(e) ?? 0) + 1);
     }
   }
-  const open = [...edges.values()].filter((n) => n !== 2).length;
-  if (open) throw new Error(`${what}: ${open} edges not shared by exactly two triangles`);
+  let open = 0;
+  for (const [e, n] of edges) {
+    const [a, b] = e.split('|');
+    if ((edges.get(`${b}|${a}`) ?? 0) !== n) open++;
+  }
+  if (open) throw new Error(`${what}: ${open} edges not matched by a reverse edge (a hole or a flipped body)`);
 }
 
 /** All of a build's support triangles: walls, wedges, braces and the bed pad. */
 export const supportOf = (built) => [...(built.triangles ?? []), ...(built.padTriangles ?? [])];
 
-/** out/<name>-coupon.3mf (part + supports as two objects), .stl (merged), -fins.stl. */
+/** out/<name>-coupon.3mf (part and supports as two objects in register, the site's
+ *  Export > 3MF since #199), .stl (merged), -fins.stl. */
 export async function writeCoupon(c, name, title, sup) {
   assertClosed(sup, `${name} supports`);
   const bytes = async (blob) => new Uint8Array(await blob.arrayBuffer());
-  Deno.writeFileSync(`${c.out}${name}-coupon.3mf`, await bytes(writeThreeMF(c.part, sup, title)));
+  Deno.writeFileSync(`${c.out}${name}-coupon.3mf`, await bytes(writeThreeMF(c.part, sup, title, { separate: true })));
   Deno.writeFileSync(`${c.out}${name}-coupon.stl`, await bytes(writeBinarySTL([...c.part, ...sup], title)));
   if (sup.length) Deno.writeFileSync(`${c.out}${name}-fins.stl`, await bytes(writeBinarySTL(sup, `${title} supports`)));
   console.log(`wrote ${c.out}${name}-coupon.3mf (+ .stl${sup.length ? ', supports-only .stl' : ''})`);

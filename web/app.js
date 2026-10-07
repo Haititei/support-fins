@@ -27,6 +27,8 @@ import { loadURL } from './ui/io.js';
 import { applyVolume } from './ui/volume.js';
 import { buildExportGeometry } from './ui/export.js';
 import './ui/plugins.js';
+import './ui/calibrate.js';
+import './ui/topbar.js';
 import { updateReadout } from './ui/readout.js';
 import {
   drawnWalls, drawnTris, drawStart, selectedWall, drawActive, sizeMarkers, clearPreview,

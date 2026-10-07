@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Every calibration coupon on one plate: one 3MF for a 256 x 256 bed (Bambu X1/P1/A1).
 
-Reads each coupon's committed print/ file -- the 3MF (part + supports as one object,
-the tine coupon's KISS tines as a second object, kept with it) or, for the angle
+Reads each coupon's committed print/ file -- the 3MF (part and supports as two objects
+in register, as the site exports them; the tine coupon's KISS tines likewise) or, for the angle
 coupon, its STL (no supports) -- and lays them out in rows, each coupon its own
 named object at a fixed position.
 
     python3 prototype/calibration/plate.py      # -> out/all-coupons.3mf
 
 Print settings the coupons need: 0.2 mm layers, 0.2 mm first layer, adaptive /
-variable layer height OFF (gap), and NEVER Arrange (tine: arranging splits its kiss
-tines from the part). Each coupon's own README entry says what to read off it.
+variable layer height OFF (gap), and NEVER Arrange (it splits every coupon's
+supports from its part). Each coupon's own README entry says what to read off it.
 """
 import io
 import re
@@ -23,7 +23,10 @@ import trimesh
 HERE = Path(__file__).resolve().parent
 BED, GAP = 256.0, 6.0
 # rows, front to back; each row left to right
-ROWS = [['pad', 'bore'], ['span', 'slender'], ['tine', 'grip'], ['foot', 'gap', 'lip'], ['angle']]
+# (bore v2 is 106 mm long: it rides with angle, since pad + bore no longer fit 256)
+# (cutout/ and sampler/ aren't on it: the plate is full -- 238 x 235 mm -- and either
+# would push a row past 256; print them on their own)
+ROWS = [['pad'], ['span', 'slender'], ['tine', 'grip'], ['foot', 'gap', 'lip'], ['angle', 'bore']]
 NS = 'http://schemas.microsoft.com/3dmanufacturing/core/2015/02'
 
 
@@ -92,10 +95,15 @@ def mesh_xml(i, m, name):
 
 for n, its, t in placed:
     for k, parts in enumerate(its):
-        label = n if k == 0 else f'{n} kiss tines (own object)'
+        # a second item is the supports as their own object (the site's 3MF since #199);
+        # the tine coupon's is its kiss tines
+        label = n if k == 0 else f'{n} kiss tines (own object)' if n == 'tine' else f'{n} supports'
         ids = []
         for j, m in enumerate(parts):
-            objs.append(mesh_xml(oid, m, f'{label} {"part" if j == 0 and k == 0 else "supports"}'))
+            # an assembly's meshes say part / supports; a lone item is just its label
+            name = (f'{label} {"part" if j == 0 else "supports"}' if len(parts) > 1
+                    else label if k else f'{n} part')
+            objs.append(mesh_xml(oid, m, name))
             ids.append(oid)
             oid += 1
         if len(ids) > 1:

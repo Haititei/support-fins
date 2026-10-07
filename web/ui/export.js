@@ -49,10 +49,13 @@ export function buildExportGeometry() {
 const FORMATS = {
   // STL flattens part + fins into one solid.
   'export-stl': (g) => [writeBinarySTL([...g.partTris, ...g.finTris], g.base), `${g.base}-fins.stl`],
-  // 3MF keeps the fins as a separate object and states millimeters, so the file
-  // opens correctly oriented and support-free in Bambu Studio, OrcaSlicer, or
-  // PrusaSlicer without a re-scale or a re-rotate.
-  'export-3mf': (g) => [writeThreeMF(g.partTris, g.finTris, g.base), `${g.base}-fins.3mf`],
+  // 3MF states millimeters, so the file opens correctly oriented and support-free
+  // in Bambu Studio, OrcaSlicer, or PrusaSlicer without a re-scale or a re-rotate.
+  // It writes the supports as their OWN object, so the slicer slices them apart and
+  // a tine only touches the part (GitHub #38, the grip coupon's split print). The
+  // site offers only this form: the old one-object assembly kept the pair from being
+  // arranged apart, too small a gain for tines that fuse.
+  'export-3mf': (g) => [writeThreeMF(g.partTris, g.finTris, g.base, { separate: true }), `${g.base}-fins.3mf`],
   // Just the fins + pad (issue #5). One body, so 3MF would add nothing over STL.
   'export-fins': (g) => [writeBinarySTL(g.finTris, `${g.base} fins`), `${g.base}-fins-only.stl`],
 };

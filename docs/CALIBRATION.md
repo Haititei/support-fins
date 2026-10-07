@@ -7,8 +7,9 @@ with its value raised on top (the angle, the gap in mm, the setting), so there's
 nothing to look up.
 
 Print them with the slicer profile you normally use, with **slicer supports off**. The
-supports are already in the file (and the angle test needs none). Files are in
-`prototype/calibration/<name>/print/`.
+supports are already in the file (and the angle test needs none). Download them from
+the site's **Calibrate** menu, which also shows each one's print time and filament;
+they're also in `prototype/calibration/<name>/print/`.
 
 | Test | Sets | Where on printfins.com |
 |---|---|---|
@@ -17,7 +18,9 @@ supports are already in the file (and the angle test needs none). Files are in
 | Grip | how many tines hold each wall | Tines ▸ Tine grip |
 | Span | how wide a bare stretch your printer bridges (tells us, for now) | Walls ▸ Wide-face coverage (Auto) |
 | Pad | how the bed pad lets go | Clearances ▸ Bed pad ▸ Custom ▸ Pad gap |
+| Cutouts | which holes your walls can have and still stand | Walls ▸ Cutouts |
 | Bore | whether holes pull clean (no setting: tells us) | — |
+| Sampler | nothing: every hard shape at once, to see what you get | — |
 
 ## Angle (`angle/print/angle-coupon.stl`) — print this first
 Seven ramps, 10° to 40°, each with its angle in degrees written on top. The angle is measured **up from the
@@ -71,10 +74,36 @@ a different gap off its cube: 0, 0.08, 0.12, 0.16, 0.2, 0.3 mm, written on each 
   0.2, Pad grip 0, Pad spread 4**. Custom starts from whatever pad the part had before,
   which may not be those.
 
+## Cutouts (`cutout/print/cutout-coupon.3mf`)
+Five tall ledges, each held by walls cut with one **Cutouts** style, written on top:
+NONE, DIAMOND, TRIANGLE, ARCH and LATTICE. Cutouts open the middle of a tall wall to
+save plastic; its top, foot and ends stay solid, and every hole has a pointed roof so
+it prints without bridging. Before snapping anything off, check every wall stood and
+every ledge printed flat. Then snap the walls off.
+- A cut wall leaned, sagged at a hole or broke apart instead of snapping off whole →
+  that style is too open for your printer.
+- Use the **most open style whose walls all held**. On this coupon Diamond and Triangle
+  use about 22 % less support plastic than solid walls, Arch and Lattice about a third less.
+
 ## Bore (`bore/print/bore-coupon.3mf`)
-A block with four sideways holes, 3, 5, 8 and 12 mm across (the size is written above each), each with a
-wall inside. Pull each wall out of the open end. Tell us which came out clean and
-which broke or stuck. That tells us how small a hole the tool should still support.
+A block with eight sideways holes in two sets of four, 3, 5, 8 and 12 mm across (the size
+is written at the front of each, the set's letter at the back). Set **A**'s holes each have
+one wall running along the hole, the way the site supports them. Set **X**'s have three
+walls running across the hole instead. Pull every wall out of an open end (an X wall
+slides out along the hole). Tell us which came out clean and which broke or stuck, and
+whether A or X left the smoother hole ceiling. That tells us how small a hole the tool
+should still support, and which way its walls should run.
+
+## Sampler (`sampler/print/sampler-coupon.3mf`)
+One part with every hard shape at once, supported the way the site does it in
+**Full coverage** at the default settings: ramps (40°, 30°, 20°, written on top),
+a ball, a thin ledge far out, a flat table, a mushroom on a thin stem, a cave,
+sideways holes (3, 6, 12 mm, written above each) and an arch. It sets nothing.
+Print it last, once the others are tuned, to see what to expect from your own parts,
+then snap every wall off. It's two objects, part and supports: don't Arrange or move
+one without the other.
+Tell us which walls stuck or tore the part, and which undersides sagged. The flat
+table may sag between its walls: they run the same way the slicer bridges it for now.
 
 ## Tell us what you got
 These results are how the defaults get better. Open a
