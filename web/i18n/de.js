@@ -1,5 +1,5 @@
 export default {
-  "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps, shrinks the tine bite, and gives the bed pad a gap instead of a bite. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich fester mit Stützen als PLA, daher vergrößert PETG die Abstände, verringert den Eingriff der Zacken und versieht den Stützfuß mit einem Spalt statt Verankerung. PLA behält den festeren Halt.",
+"The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps, shrinks the tine bite, and gives the bed pad a gap instead of a bite. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich fester mit Stützen als PLA, daher vergrößert PETG die Abstände, verringert den Eingriff der Zacken und versieht den Stützfuß mit einem Spalt statt Verankerung. PLA behält den festeren Halt.",
 
   "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps and gives the bed pad a gap instead of a tack. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich stärker mit Stützen als PLA, daher vergrößert PETG die Abstände und versieht den Stützfuß mit einem Spalt statt Haftung. PLA behält den festeren Halt.",
   "No build for {name}": "Kein Build für {name}",
@@ -21,6 +21,11 @@ export default {
   "Click this, then click a face to set it flat on the bed. Off by default so a stray click can't re-lay the part.": "Hier klicken und dann eine Fläche anklicken, um sie flach aufs Druckbett zu legen. Standardmäßig aus, um versehentliches Drehen zu verhindern.",
 
   'The tines grab onto the part and bend away when you snap the supports off.': 'Die Haltezacken greifen ins Bauteil und biegen sich weg, wenn man die Stützen abbricht.',
+
+'Windows · experimental': 'Windows · experimentell',
+  'Built and tested against the engine, but not yet run in SolidWorks itself: tell us how it goes.': 'Gegen die Engine gebaut und getestet, aber noch nicht in SolidWorks selbst ausgeführt: Erfahrungen bitte melden.',
+  'Unzip somewhere it can stay, right-click SupportFins\\install.bat ▸ Run as administrator, restart SolidWorks. In a part: Support Fins tab ▸ Support Fins.': 'An einen festen Ort entpacken, Rechtsklick auf SupportFins\\install.bat ▸ Als Administrator ausführen, SolidWorks neu starten. In einem Teil: Registerkarte Support Fins ▸ Support Fins.',
+  "Full coverage — every overhang": "Vollständige Abdeckung — alle Überhänge",
 
   'the upright sides are blocked by other parts of the model in this pose': 'die aufrechten Seiten sind in dieser Lage durch andere Modellteile blockiert.',
   'node support-fins.mjs part.stl (or deno run -RW support-fins.mjs part.stl) → part-fins.3mf, part + fins. --help lists every setting.': 'node support-fins.mjs part.stl (oder deno run -RW support-fins.mjs part.stl) → part-fins.3mf, Bauteil + Finnen. --help zeigt alle Optionen.',
@@ -192,6 +197,7 @@ export default {
   "Material": "Material",
   "Placement": "Platzierung",
   "Auto — place supports for me": "Auto — Stützen automatisch platzieren",
+  "Full coverage — every overhang": "Volle Abdeckung — jeder Überhang",
   "Draw — place them by hand": "Zeichnen — manuell platzieren",
   "grip the part": "greifen ins Bauteil",
   "Tine grip": "Haltezacken-Dichte",

@@ -16,7 +16,7 @@
  * into a watertight wall, reusing prop/sweep.js's proven `sweep` and its three
  * line-settling passes verbatim.
  */
-import { PROP, PART_BAND, footFor, surfaceZsAt as gridZsAt, sweep, sweepBetween, sweepSquat, floorLine, moldLine, contourTop, lowerSag, settleTop, emitTines, tineStepFor } from './prop.js';
+import { PROP, PART_BAND, footFor, surfaceZsAt as gridZsAt, surfaceHitsAt as gridHitsAt, sweep, sweepBetween, sweepSquat, floorLine, moldLine, contourTop, lowerSag, settleTop, emitTines, tineStepFor } from './prop.js';
 
 /**
  * A hand-drawn wall may be much shorter than an auto wall (PROP.minSpan, 7 mm): the user
@@ -140,9 +140,10 @@ function acrossClear(line, tris, w, z) {
  * PRINT space, [x, y, z]). Straight in XY by construction. Each station's height
  * is the part surface nearest the line the user drew -- not the global lowest,
  * which would jump to another feature -- and then the three prop/contact.js passes pull
- * the top to a clean `gap` below the part exactly as the auto-placer does.
+ * the top to a clean `gap` below the part exactly as the auto-placer does. `under`
+ * limits the pick to down-facing surfaces (the fill pass; see below).
  */
-export function drawnLine(a, b, tris, step = PROP.stationStep, band = Infinity) {
+export function drawnLine(a, b, tris, step = PROP.stationStep, band = Infinity, under = false) {
   const dx = b[0] - a[0], dy = b[1] - a[1];
   const len = Math.hypot(dx, dy);
   if (len < 1e-6) return null;
@@ -153,7 +154,14 @@ export function drawnLine(a, b, tris, step = PROP.stationStep, band = Infinity) 
     const x = a[0] + dx * t, y = a[1] + dy * t;
     const hint = a[2] + (b[2] - a[2]) * t;   // the height the drawn line implies here
     let z = hint, best = Infinity;
-    for (const zz of surfaceZsAt(tris, x, y)) {
+    // `under`: only surfaces facing DOWN. A column through a leaning figure meets its
+    // back (the underside, red) and its front; on a curved back the straight-line
+    // hint lands nearer the front, so a long wall the fill pass laid down a spine
+    // read "faces up" at every station. A hand-drawn line keeps the nearest of all.
+    // (Through prop's grid: the fill pass runs this per candidate line, and a linear
+    // scan per station was minutes on a 1M-face mini.)
+    const zs = under ? gridHitsAt(tris, x, y).filter((h) => h[1] < 0).map((h) => h[0]) : surfaceZsAt(tris, x, y);
+    for (const zz of zs) {
       const d = Math.abs(zz - hint);
       if (d < best) { best = d; z = zz; }
     }
@@ -170,7 +178,9 @@ export function drawnLine(a, b, tris, step = PROP.stationStep, band = Infinity) 
 }
 
 /**
- * Build one drawn breakaway wall. Returns `{ ok: true, tris, length, height }`
+ * Build one drawn breakaway wall. Returns `{ ok: true, tris, length, height, top }`
+ * (`top`: the wall's contact line, the surface-z stations its top follows).
+ * `opts.under`: follow only down-facing surfaces (drawnLine) -- the fill pass's walls.
  * or `{ ok: false, reason }` with a message the UI can show -- a hand-drawn wall
  * that can't be built should say WHY (too short, at the plate) rather than
  * silently doing nothing, the failure mode M5's scoreboard was built on.
@@ -202,7 +212,7 @@ export function drawnWall(a, b, tris, zBed = 0, opts = {}) {
   // degrade to z=0 on their own. This is what stops the "marched past the part
   // straight to the plate" bug: on the over-the-part case sweep-to-plate SUCCEEDS
   // and silently builds the tall stilt, so the fix must PREFER the floor.
-  const topPA = drawnLine(a, b, tris, PROP.stationStep, PART_BAND);
+  const topPA = drawnLine(a, b, tris, PROP.stationStep, PART_BAND, !!opts.under);
   // ...unless the line lies ON the part: drawn on an UPWARD face (the UI lets you
   // click one), it read the part's own underside as its floor and stood the wall
   // inside the part, floor to top (local issue 033: a sphere's top, 296-384
@@ -218,11 +228,11 @@ export function drawnWall(a, b, tris, zBed = 0, opts = {}) {
         height = Math.max(height, (topPA[i][2] - PROP.gap) - floor[i][2]);
       }
       const tines = withTines(topPA);
-      return { ok: true, tris: out, length: len, height, partAttached: true, tines };
+      return { ok: true, tris: out, length: len, height, partAttached: true, tines, top: topPA };
     }
   }
 
-  const line = drawnLine(a, b, tris);
+  const line = drawnLine(a, b, tris, PROP.stationStep, Infinity, !!opts.under);
   if (!line || line.length < PROP.minStations) {
     return { ok: false, reason: 'no surface found along that line' };
   }
@@ -259,7 +269,7 @@ export function drawnWall(a, b, tris, zBed = 0, opts = {}) {
     if (squat) {
       out.push(...squat.tris);
       const tines = withTines(squat.top, squat.partAttached ? undefined : PROP.squatBrimH);
-      return { ok: true, tris: out, length: len, height: squat.height, partAttached: squat.partAttached, squat: true, tines };
+      return { ok: true, tris: out, length: len, height: squat.height, partAttached: squat.partAttached, squat: true, tines, top: squat.top };
     }
     const clickTop = Math.min(a[2], b[2]) - zBed;
     if (clickTop >= PROP.minHeight + PROP.gap) {
@@ -272,7 +282,7 @@ export function drawnWall(a, b, tris, zBed = 0, opts = {}) {
   let height = 0;
   for (const p of line) height = Math.max(height, p[2] - PROP.gap - zBed);
   const tines = withTines(line);
-  return { ok: true, tris: out, length: len, height, tines };
+  return { ok: true, tris: out, length: len, height, tines, top: line };
 }
 
 /**

@@ -151,9 +151,10 @@ el('suggest-orient').addEventListener('click', () => {
       el('suggest-body').hidden = false;
       if (!candidates.length || confidence === 'none') {
         el('suggest-list').hidden = true;
+        const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
         el('suggest-note').textContent = confidence === 'none'
-          ? 'No printable orientation: this part balances on a point at every angle.'
-          : 'Nothing to suggest for this part.';
+          ? (isDe ? 'Keine druckbare Ausrichtung: Dieses Bauteil balanciert in jedem Winkel auf einem Punkt.' : 'No printable orientation: this part balances on a point at every angle.')
+          : (isDe ? 'Keine Vorschläge für dieses Bauteil.' : 'Nothing to suggest for this part.');
       } else {
         renderSuggestions();
         // Lead with the win when the best pose needs no support (or clears every

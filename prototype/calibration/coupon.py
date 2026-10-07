@@ -1,13 +1,18 @@
 """Shared part-building for the calibration coupons' gen.py scripts.
 
-Boxes, raised rung dots, and the one-solid-piece check every coupon makes before
+Boxes, raised rung labels (and the older dots), and the one-solid-piece check every coupon makes before
 it writes out/coupon_part.stl (a multi-piece coupon lost parts off the bed).
 """
 import json
 from pathlib import Path
 
 import trimesh
-from trimesh.creation import box
+from matplotlib.font_manager import FontProperties
+from matplotlib.textpath import TextPath
+from shapely.geometry import Polygon
+from trimesh.creation import box, extrude_polygon
+
+FONT = FontProperties(family='DejaVu Sans', weight='bold')   # ships with matplotlib
 
 
 def bx(x0, x1, y0, y1, z0, z1):
@@ -20,6 +25,26 @@ def dots(n, x, y, z, step=1.8, size=1.0, height=0.8):
     """n raised dots in a row along +x from (x, y), standing on the face at z: rung n."""
     return [bx(x + i * step - size / 2, x + i * step + size / 2, y - size / 2, y + size / 2, z - 0.1, z + height)
             for i in range(n)]
+
+
+def label(text, x, y, z, size=6.0, height=0.6, centre=True):
+    """Raised text standing on the face at z, reading along +x: the rung's setting,
+    printed on it. Bold, `size` mm tall caps (>= 5 keeps strokes ~0.8 mm, two beads).
+    Glyph outlines are filled even-odd, so the holes in A, O, R stay open."""
+    shape = None
+    for ring in TextPath((0, 0), text, size=size * 1.37, prop=FONT).to_polygons():
+        if len(ring) < 3:
+            continue
+        p = Polygon(ring).buffer(0)
+        shape = p if shape is None else shape.symmetric_difference(p)
+    x0, y0, x1, y1 = shape.bounds
+    dx, dy = (x - (x0 + x1) / 2, y - (y0 + y1) / 2) if centre else (x - x0, y - y0)
+    out = []
+    for g in getattr(shape, 'geoms', [shape]):
+        m = extrude_polygon(g, height + 0.1)
+        m.apply_translation([dx, dy, z - 0.1])
+        out.append(m)
+    return out
 
 
 def write(here, parts, rungs, one_piece=True):

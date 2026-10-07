@@ -8,7 +8,7 @@ import { el } from './dom.js';
 import { removedIds } from './remove.js';
 import { drawnWalls, drawMsg, selectedWall, selectedNote, drawShown, drawMaterial } from './walls.js';
 import {
-  finMode, finsVisible, materialDensity, syncSectionSums,
+  finMode, finsVisible, materialDensity, syncSectionSums, autoLike,
 } from './settings.js';
 import { analysisTiming } from './part.js';
 import { activeAdded, finMaterial, padMaterial } from './finbuild.js';
@@ -28,9 +28,12 @@ function explainNoFins(b) {
   // something that was never the problem. This outranks every mode-specific
   // reason below.
   if (b.seating?.kind === 'point' && !b.pad) {
-    return 'this part touches the plate at a single point, so it has nothing to '
-         + 'stand on. Turn the bed pad on to seat it, or rotate until it sits '
-         + 'down on a face or an edge';
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
+    return isDe
+      ? 'Dieses Bauteil berührt die Druckplatte nur an einem einzelnen Punkt und hat daher keinen Stand. Aktivieren Sie den Stützfuß, um es zu stützen, oder drehen Sie es, bis es auf einer Fläche oder Kante aufliegt.'
+      : 'this part touches the plate at a single point, so it has nothing to '
+        + 'stand on. Turn the bed pad on to seat it, or rotate until it sits '
+        + 'down on a face or an edge';
   }
   if (b.mode === 'prop') {
     const s = b.skipped ?? {};
@@ -261,7 +264,7 @@ function updateFinReadout(built, ms) {
   // Hand-added walls (Suggest + Draw mix) count toward the tally too.
   const drawnOk = drawShown() ? drawnWalls.filter((w) => w.ok).length : 0;
   let autoTxt;
-  if (built.mode === 'auto') {
+  if (autoLike(built.mode)) {
     // Named apart so the readout is honest: the support fins sit on the overhangs
     // (tined when the toggle is on), the props are the fallback under ledges too
     // flat to take a fin. "N fins" alone would hide which is which.
@@ -284,7 +287,8 @@ function updateFinReadout(built, ms) {
     ? `${autoTxt || drawnTxt ? ' + ' : ''}${sw.count} sway brace${sw.count === 1 ? '' : 's'}`
       + (sw.tines ? ` · ${sw.tines} brace tines` : '')
     : '';
-  box.textContent = (autoTxt + drawnTxt + swayTxt + removedTxt) || 'none possible';
+  const isDeReadout = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
+  box.textContent = (autoTxt + drawnTxt + swayTxt + removedTxt) || (isDeReadout ? 'keine möglich' : 'none possible');
   box.classList.toggle('warn', n === 0 && !drawnOk && !sw?.count);
 
   // `lead` = short + must-see, stays in the panel; `help` = how-it-works and
@@ -296,7 +300,7 @@ function updateFinReadout(built, ms) {
     // (i), since it's a paragraph and the user can hover for it.
     help.push(explainNoFins(built));
   } else if (n) {
-    if (built.mode === 'auto') {
+    if (autoLike(built.mode)) {
       // Make "why no tines" legible: props never take tines, only the gripping
       // fins do, so a part that gets only props shows no tines and that's correct.
       const b = built.braceCount, p = built.propCount;
@@ -341,24 +345,52 @@ function updateFinReadout(built, ms) {
       : 'this part balances on one point with nothing under it. Turn the bed pad on, or rotate until it sits down');
   }
   if (padNote(built)) lead.push(padNote(built));
-  if (built.floating?.length) {
-    // A piece not joined to the rest stands on its supports alone, and is almost
-    // always a modelling slip (a bore wider than the wall it cuts). Must-see.
+  if (built.floating) {
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
     const n = built.floating.length;
     const drop = built.floating[0].drop.toFixed(1);
-    lead.push((n === 1 ? `one piece of this part isn’t joined to the rest: it starts ${drop} mm up`
-                       : `${n} pieces of this part aren’t joined to the rest: the first starts ${drop} mm up`)
-            + ', held only by supports. Check the model is one piece (a hole or cut may go right through)');
+    lead.push(isDe
+      ? ((n === 1 ? `Ein Teil dieses Modells ist nicht mit dem Rest verbunden: Es beginnt ${drop} mm weiter oben`
+                  : `${n} Teile dieses Modells sind nicht mit dem Rest verbunden: Das erste beginnt ${drop} mm weiter oben`)
+         + ', nur von Stützen gehalten. Prüfen Sie, ob das Modell aus einem Stück besteht (eine Bohrung oder ein Schnitt geht eventuell komplett durch).')
+      : ((n === 1 ? `one piece of this part isn’t joined to the rest: it starts ${drop} mm up`
+                  : `${n} pieces of this part aren’t joined to the rest: the first starts ${drop} mm up`)
+         + ', held only by supports. Check the model is one piece (a hole or cut may go right through)'));
   }
   if (built.sagRisk) {
-    // The coverage slider is left of centre, so a broad flat overhang got rows
-    // spaced wider than the 12mm anti-sag guide. That's allowed on purpose (fewer
-    // supports), but the plate can bow between them -- must-see, so it's in the
-    // panel, not behind the (i).
-    lead.push('coverage is below the anti-sag guide, so a broad overhang may sag '
-            + 'between supports — nudge the slider right if the surface bows');
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
+    lead.push(isDe
+      ? 'Die Abdeckung liegt unter der Empfehlung gegen Durchhängen, sodass ein breiter Überhang zwischen den Stützen durchhängen kann — Schieberegler nach rechts ziehen, falls sich die Fläche durchbiegt'
+      : ('coverage is below the anti-sag guide, so a broad overhang may sag '
+         + 'between supports — nudge the slider right if the surface bows'));
   }
-  if (built.unserved) {
+  // Full coverage (fins/fill.js): what it added, and -- must-see, in the panel --
+  // the red it couldn't reach, never hidden.
+  const fl = built.fill;
+  if (fl) {
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || localStorage.getItem('support_fins_lang') === 'de';
+    if (fl.walls) {
+      help.push(isDe
+        ? `Vollständige Abdeckung fügte ${fl.walls} Wand/Wände unter Überhängen hinzu, die Auto frei gelassen hatte.`
+        : `Full coverage added ${fl.walls} wall${fl.walls === 1 ? '' : 's'} under overhangs Auto left bare.`);
+    } else if (fl.bareBefore < 1 && n) {
+      help.push(isDe
+        ? 'Auto erreicht hier bereits jeden Überhang, daher hat die vollständige Abdeckung nichts hinzugefügt.'
+        : 'Auto already reaches every overhang here, so Full coverage added nothing.');
+    }
+    const bare = Math.round(fl.unservedArea);
+    if (fl.capped) {
+      lead.push(isDe
+        ? `Vollständige Abdeckung stoppte am Wandlimit mit ${bare} mm² noch freiem Überhang — Bauteil drehen oder zu Auto wechseln`
+        : `Full coverage stopped at its wall limit with ${bare} mm² of overhang still bare — rotate the part, or switch to Auto`);
+    } else if (bare >= 1) {
+      lead.push(isDe
+        ? `${bare} mm² Überhang kann in dieser Lage von keiner Wand erreicht werden — Bauteil neigen oder manuell eine Wand hinzufügen`
+        : `${bare} mm² of overhang no wall can reach this way up — tilt the part, or add a wall by hand`);
+    }
+  }
+  // (in Full coverage the fill's own line above says what is still bare)
+  if (built.unserved && !fl) {
     const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || localStorage.getItem('support_fins_lang') === 'de';
     const one = built.unserved === 1;
     if (isDe) {

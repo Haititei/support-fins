@@ -115,6 +115,29 @@ export function surfaceZAt(tris, x, y) {
 }
 
 /**
+ * ...and with each height, its triangle's unit normal z: [z, nz] (unordered).
+ * Which way a surface faces, through the same grid -- the fill pass (fins/fill.js)
+ * asks whether a station is under the part, and on a thin shell (a chair cast as a
+ * skin) parity inside-tests can't say.
+ */
+export function surfaceHitsAt(tris, x, y) {
+  const hits = [];
+  if (tris.length === 0) return hits;
+  const g = buildZGrid(tris);
+  const c = cellOf(g, x, y);
+  if (c === null) return hits;
+  for (let k = g.start[c]; k < g.start[c + 1]; k++) {
+    const i = g.items[k], z = zOn(tris, i, x, y);
+    if (z === null) continue;
+    const ux = tris[i + 3] - tris[i], uy = tris[i + 4] - tris[i + 1], uz = tris[i + 5] - tris[i + 2];
+    const vx = tris[i + 6] - tris[i], vy = tris[i + 7] - tris[i + 1], vz = tris[i + 8] - tris[i + 2];
+    const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    hits.push([z, nz / (Math.hypot(nx, ny, nz) || 1)]);
+  }
+  return hits;
+}
+
+/**
  * Every part-surface height directly above (x, y), as a list.
  *
  * `surfaceZAt` returns only the LOWEST, which is what a bed-attached prop wants

@@ -8,8 +8,9 @@ actually makes (tine/ also adds its KISS tines as a second object, on purpose):
     python3 prototype/calibration/<name>/gen.py      # the part -> out/coupon_part.stl
     deno run -A prototype/calibration/<name>/build.js  # walls on it -> out/<name>-coupon.3mf
 
-The user-facing coupons (angle, gap, tine, span, pad, bore) share `coupon.py` (boxes, rung
-dots, the one-piece check) and `coupon.js` (the site's own call -- `analyze(topo, 45,
+The user-facing coupons (angle, gap, grip, span, pad, bore) share `coupon.py` (boxes, rung
+labels -- `label()` raises each rung's value as text; tine/ keeps `dots()` and foot/ its
+own inline dots, as printed -- the one-piece check) and `coupon.js` (the site's own call -- `analyze(topo, 45,
 rot)` then `buildFins(..., {mode: 'auto', bedPad: true})` at the site's PLA defaults --
 run once per rung with that rung's setting, keeping the support PIECES -- whole
 connected bodies, never cut -- whose centre is in the rung's box; every coupon's
@@ -49,9 +50,8 @@ The walls come from draw mode's own `drawnWall` at the site's defaults (same swe
 foot as Auto), with minSpan lifted for the build. Each runs along x on purpose, so its
 length is exactly the one under test (Auto would run along the ledge's long side). The
 ledge's tongue sticks out only 0.2 mm past each wall end, so no lip can curl into a
-tall wall. The dots sit on the wide root by the spine. Flat ledges get no tines
-(nothing for one to bite sideways into), same as the site. Ledge k carries k dots, in
-rows of four:
+tall wall. The label (wall length x height, mm) sits on the wide root by the spine. Flat ledges get no tines
+(nothing for one to bite sideways into), same as the site. The ledges, in print order:
 
 | ledge | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -77,7 +77,7 @@ carries k dots (`print/` is the as-printed build, from commit a2e5a80 which stil
 ### lip/ -- how far may an overhang run past its last wall?
 Six ledges 10 mm up off a spine, each with one wall on the slab 3 mm from the spine
 (the same short bridge on every ledge); the ledges get deeper so the lip past the
-wall's outer face grows. Ledge k carries k dots: 1 lip 0.1 (flush), 2 lip 1, 3 lip 2,
+wall's outer face grows. Each ledge has its lip raised on top: 1 lip 0.1 (flush), 2 lip 1, 3 lip 2,
 4 lip 3, 5 lip 4, 6 lip 6 mm. Sets when a row moves out to a free edge (PROP.edgeInset,
 local issue 009's free-edge rule).
 - **waiting on print.**
@@ -87,8 +87,8 @@ local issue 009's free-edge rule).
 The gap is vertical: wall top to the underside of the overhang it holds. Too small
 welds; too big lets the overhang sag. Bar on the plate, six identical 12 x 10 mm flat
 ledges 10 mm up; the site's Auto build per ledge. **Rungs are whole empty layers**,
-because a slicer can only leave whole layers there: dots = layers, 1 dot 0.2, 2 dots
-0.4, 3 dots 0.6 mm at 0.2 mm layers, and the far side repeats the near side. **Print
+because a slicer can only leave whole layers there: each ledge's gap is raised on top,
+0.2 / 0.4 / 0.6 mm = 1 / 2 / 3 layers at 0.2 mm layers, and the far side repeats the near side. **Print
 at 0.2 mm layers with a 0.2 first layer and variable/adaptive layer height off**: a
 0.3 first layer shifts every slice plane 0.1 mm and the gaps stop being whole layers.
 For a user: the fewest empty layers that snap off clean. The 3-layer rung (0.6) is
@@ -99,7 +99,29 @@ issue 026).
   layers, ledges 1-5 all printed a one-layer (0.2) gap and only 0.4 differed. The
   rebuilt coupon slices as labelled (0.2 / 0.4 / 0.6, checked in the G-code). The
   Gap field itself has the same problem (local issue 026).
-- **waiting on print** (PLA and PETG: the same file, the rungs ARE the gaps).
+- **2026-10-06, PLA:** 0.2 (one empty layer) was the only worthwhile gap; 0.4 and 0.6
+  were worse. 0.2 is already the default (PROP.gap, MATERIAL.pla.propGap), so
+  nothing changes; the Gap field's in-between values are moot (local issue 026). The
+  underside at 0.2 was clean but "not better than tree or snug supports": between
+  the two walls the slicer bridges (PrusaSlicer: bridge infill across the ledge,
+  over walls along it) -> orient/.
+
+### orient/ -- does it matter which way a flat overhang's walls run, and how close? (no setting yet)
+Bar on the plate, six identical flat ledges 10 mm up (16.6 deep x 17.2 wide), walls
+from Draw's drawnWall at the default 0.2 gap. Near side ACROSS: walls along x, across
+the slicer's bridge lines (Auto's choice on the gap coupon). Far side PARALLEL: the
+same ledges, walls along y, parallel to them. Pairs share the wall spacing exactly
+(centre to centre, the bar face counting as one), raised on top: 8 / 5.3 / 4 mm
+(2 / 3 / 4 walls across, the last 0.6 in from the free edge; 3 / 4 / 5 parallel, the
+outer two 0.6 in from the side edges). What still differs, by nature: PARALLEL puts
+more wall under a ledge (more to snap off), and its far edge is bare between walls. Checked in PrusaSlicer 3.0
+alpha (default profile, 0.2 layers): every ledge's first layer is bridge infill at
+90 deg, so the near side's walls cross it and the far side's run with it.
+For a user: compare each pair (does direction matter?) and down each side (how
+close do walls need to be for an underside you'd keep?). If ACROSS wins, a wall
+direction rule (cross the slicer's bridge) is worth building; the spacing that
+looks good sets the Coverage dial's target (span/).
+- **waiting on print.**
 
 ### span/ -- how far apart may walls under a broad face sit? (the Coverage dial)
 Bar on the plate, five identical 30 x 24 mm flat shelves 10 mm up; Auto per shelf
@@ -156,6 +178,27 @@ part's next layer prints straight onto the tine; the slicer merges part and supp
 (one object), so the reach changes nothing. Bite is not a user setting any more (field
 removed in #167; tines end at the part's surface in #168), so the coupon went too.
 Replaced by tine/ (local issue 027).
+
+### grip/ -- what does the Tine grip slider do on a print? (Tines > Tine grip)
+The user-facing tine coupon. Bar on the plate, four 32 mm wide 30 deg ledges rising
+14 mm (24 mm out), the site's Auto build per ledge, three walls each, every wall 23 mm
+up the ramp. Each ledge has its setting raised on top (coupon.py label(), no dots):
+OFF, LIGHT (slider left, the default), MID, FIRM (right) -> 0 / 5 / 7 / 11 tines a wall (build.js checks every wall
+in a ledge got the same count). For a user: the lightest setting whose walls held
+and whose ledge printed clean; marks get worse to the right.
+Why 30 deg and this long: every wall gets at least 3 tines (`PROP.minGripTines`), and
+the slider runs 5 -> 2 mm between them, so on a short wall it does nothing. The tine
+coupon's 6 mm walls got 3 tines at both ends of the slider. A 30 deg ramp gives a long
+wall at a low height.
+Found building it: a main-pass wall's `built.fins[i].tines` reads 0 even when it has
+tines (`built.props[i].tines` is right), so build.js counts from props.
+- **2026-10-06, PLA:** all walls stood at every rung; OFF best for marks, LIGHT next.
+- **split** (`split.py` -> `print/grip-coupon-split.3mf`): the same part and walls saved as TWO
+  objects, the way Clough42 splits his support ("Split to objects"; GitHub #38). One object
+  makes the slicer run one perimeter through part and tine (a weld); two keep their own.
+  **2026-10-06, PLA:** loads and slices as wanted in Bambu Studio and PrusaSlicer; marks
+  "a little bit better" than the merged print -- an improvement on a steep overhang, not
+  as much as hoped. Decision: build a site export with supports as their own object (not built yet).
 
 ### tine/ -- does a separate-object (KISS) tine leave a fainter mark, or is it just fewer tines?
 **v2 (current).** Bar on the plate with fifteen 40 deg ledges, 8 on the near side

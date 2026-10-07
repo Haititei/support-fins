@@ -10,13 +10,27 @@
  *   deno run -A prototype/examples/probe.js --dir <folder> [model ...] # any folder of STLs
  *     --poses up,X30,X45,Y45,suggested   (default up,X30)
  *     --dump <folder>                    one JSON per case, for render_held.py
+ *     --web <checkout>/web               build with another checkout's engine (scored by THIS
+ *                                        checkout's held.js, so both runs use one ruler)
+ *     --json <file>                      every row as JSON, for probe_diff.js
+ *     --angle <deg>                      the Overhang slider (default 45)
+ *     --mode auto|full                   the Placement mode built (default auto; full = Full
+ *                                        coverage, Auto plus fins/fill.js)
+ *
+ * Columns: `must%` is the policy number (2026-10-05: every red face gets something):
+ * held share of the MUST-hold overhang, i.e. all of it but tiny holes' ceilings
+ * (`hole`, exempt) and the strip under the squat floor (`low`, reported apart); see
+ * held.js classify. `held%` / `small%` are the old columns, kept for the baselines.
  *
  * The user-reported parts (GitHub #18 #50 #121 #157, and figures) live in the
  * git-ignored prototype/examples/reports/ -- other people's files, never committed.
  */
 import { heldFaces } from './held.js';
 
-const WEB = new URL('../../web/', import.meta.url).pathname;
+const webArg = Deno.args.includes('--web') ? Deno.args[Deno.args.indexOf('--web') + 1] : null;
+if (Deno.args.includes('--web') && (!webArg || webArg.startsWith('--'))) throw new Error('--web needs a path: --web <checkout>/web');
+const WEB = webArg ? new URL(webArg.replace(/\/?$/, '/'), `file://${Deno.cwd()}/`).pathname
+  : new URL('../../web/', import.meta.url).pathname;
 const { buildTopology, analyze } = await import(`${WEB}overhangs.js`);
 const { buildFins } = await import(`${WEB}fins.js`);
 const { PROP } = await import(`${WEB}prop.js`);
@@ -39,16 +53,21 @@ const dir = opt('--dir') ? opt('--dir').replace(/\/?$/, '/')
   : new URL(args.includes('--fixtures') ? '../../tests/fixtures/' : './real/', import.meta.url).pathname;
 const POSES = (opt('--poses') ?? 'up,X30').split(',');
 const dump = opt('--dump');
+const jsonOut = opt('--json');
+const rows = [];
 if (dump) Deno.mkdirSync(dump, { recursive: true });
-const valued = new Set(['--dir', '--poses', '--dump'].map((k) => opt(k)).filter(Boolean));
+const MODE = opt('--mode') ?? 'auto';
+const ANGLE = +(opt('--angle') ?? 45);
+const valued = new Set(['--dir', '--poses', '--dump', '--web', '--json', '--mode', '--angle'].map((k) => opt(k)).filter(Boolean));
 const want = args.filter((a) => !a.startsWith('-') && !valued.has(a));
 const files = [...Deno.readDirSync(dir)].map((f) => f.name).filter((n) => n.toLowerCase().endsWith('.stl'))
   .filter((n) => !want.length || want.includes(n.replace(/\.stl$/i, ''))).sort();
 const R = PROP.maxUnsupportedSpan / 2;
 const pad = (s, n) => String(s).padEnd(n);
 const W = Math.max(18, ...files.map((f) => Math.min(40, f.length - 2)));
-console.log(pad('model', W) + pad('pose', 10) + pad('ovh mm2', 9) + pad('held%', 7) + pad('small%', 8) + pad('walls', 6)
-  + pad('onPart', 7) + pad('stilt mm', 9) + pad('g', 6) + 'skipped');
+console.log(pad('model', W) + pad('pose', 10) + pad('ovh mm2', 9) + pad('must%', 7) + pad('hole', 6) + pad('low', 6) + pad('low%', 6)
+  + pad('held%', 7) + pad('small%', 8) + pad('walls', 6)
+  + pad('onPart', 7) + pad('stilt mm', 9) + pad('g', 6) + pad('s', 6) + 'skipped');
 for (const f of files) {
   const pos = readSTL(Deno.readFileSync(dir + f));
   const topo = buildTopology({ getAttribute: (k) => (k === 'position' ? { array: pos } : null) });
@@ -56,8 +75,10 @@ for (const f of files) {
     const rot = pose === 'up' ? rotX(0) : pose[0] === 'X' ? rotX(+pose.slice(1)) : pose[0] === 'Y' ? rotY(+pose.slice(1))
       : pose === 'suggested' ? suggestOrientations(topo, { top: 1 }).candidates[0]?.rot : null;
     if (!rot) { console.log(pad(f.slice(0, W), W) + pad(pose, 10) + '(no such pose)'); continue; }
-    const res = analyze(topo, 45, rot);
-    const b = buildFins(topo, res, rot, { mode: 'auto', bedPad: true, tines: true });
+    const res = analyze(topo, ANGLE, rot);
+    const t0 = performance.now();
+    const b = buildFins(topo, res, rot, { mode: MODE, bedPad: true, tines: true });
+    const secs = (performance.now() - t0) / 1000;
     const h = heldFaces(topo, res, rot, b, R);
     const walls = b.props ?? [];
     const onPart = walls.filter((w) => w.partAttached).length;
@@ -65,9 +86,14 @@ for (const f of files) {
     const g = (vol(b.triangles) + vol(b.padTriangles ?? [])) * 1.24 / 1000;
     const sk = Object.entries(b.skipped ?? {}).filter(([, n]) => n).map(([k, n]) => `${k}:${n}`).join(' ');
     const pct = (x) => (h.area ? (100 * x / h.area).toFixed(0) : '-');
+    const must = h.must ? (100 * h.mustHeld / h.must).toFixed(0) : '-';
     console.log(pad(f.replace(/\.stl$/i, '').slice(0, W), W) + pad(pose, 10) + pad(h.area.toFixed(0), 9)
+      + pad(must, 7) + pad(h.hole.toFixed(0), 6) + pad(h.low.toFixed(0), 6) + pad(h.low ? (100 * h.lowHeld / h.low).toFixed(0) : '-', 6)
       + pad(pct(h.held), 7) + pad(pct(h.small), 8) + pad(walls.length, 6) + pad(onPart, 7)
-      + pad(stilt.toFixed(0), 9) + pad(g.toFixed(1), 6) + sk);
+      + pad(stilt.toFixed(0), 9) + pad(g.toFixed(1), 6) + pad(secs.toFixed(1), 6) + sk
+      + (b.fill ? ` fill:${b.fill.walls}w/${b.fill.tries}t${b.fill.capped ? ' CAPPED' : ''} bare ${b.fill.bareBefore.toFixed(0)}->${b.fill.unservedArea.toFixed(0)} ${JSON.stringify(b.fill.refused)}` : ''));
+    rows.push({ model: f.replace(/\.stl$/i, ''), pose, area: h.area, held: h.held, must: h.must, mustHeld: h.mustHeld,
+      hole: h.hole, low: h.low, lowHeld: h.lowHeld, walls: walls.length, grams: g, secs });
     if (dump) {
       // the seated part (every face, for context), the overhang faces' held/small
       // flags, and the support triangles -- what render_held.py draws
@@ -76,10 +102,17 @@ for (const f of files) {
       const tri = (f9) => [s(f9), s(f9 + 3), s(f9 + 6)];
       const step = Math.max(1, Math.floor(topo.nFaces / 40000));   // context only: thin a 1M-face mini
       const part = []; for (let k = 0; k < topo.nFaces; k += step) part.push(tri(k * 9));
-      const sup = []; for (let i = 0; i < b.triangles.length; i += 3) sup.push([b.triangles[i], b.triangles[i + 1], b.triangles[i + 2]].map((v) => v.map((x) => +x.toFixed(3))));
+      // the fill pass's walls apart (render_held.py draws them teal)
+      const fillAt = (b.fins ?? []).find((w) => w.fill)?.triRanges?.[0]?.[0] ?? b.triangles.length;
+      const sup = [], fillTris = [];
+      for (let i = 0; i < b.triangles.length; i += 3) {
+        (i >= fillAt ? fillTris : sup).push([b.triangles[i], b.triangles[i + 1], b.triangles[i + 2]].map((v) => v.map((x) => +x.toFixed(3))));
+      }
       Deno.writeTextFileSync(`${dump}/${f.replace(/\.stl$/i, '').replace(/[^a-zA-Z0-9]+/g, '_')}-${pose}.json`, JSON.stringify({
         title: `${f} ${pose}`, area: h.area, held: h.held, small: h.small, walls: walls.length,
-        part, over: h.faces.map(([fc, hd, sm]) => [tri(fc * 9), hd, sm]), sup }));
+        must: h.must, mustHeld: h.mustHeld, hole: h.hole, low: h.low,
+        part, over: h.faces.map(([fc, hd, sm, cl]) => [tri(fc * 9), hd, sm, cl]), sup, fill: fillTris }));
     }
   }
 }
+if (jsonOut) Deno.writeTextFileSync(jsonOut, JSON.stringify(rows, null, 1));

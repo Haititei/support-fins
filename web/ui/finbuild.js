@@ -16,7 +16,7 @@ import { updateReadout } from './readout.js';
 import {
   drawnTris, drawnMesh, drawMaterial, drawShown, clearPreview, rebuildDrawn,
 } from './walls.js';
-import { finsVisible, finMode } from './settings.js';
+import { finsVisible, finMode, autoLike } from './settings.js';
 import { topology, rotM3, lastResult, updateFit } from './part.js';
 
 export let finMesh = null;
@@ -95,9 +95,10 @@ function finOpts() {
            tines: el('tines').checked,
            tineDensity: el('tine-density').valueAsNumber / 100,
            layerHeight: el('layer-height').valueAsNumber,
-           coverage: el('coverage').valueAsNumber / 100,
+           // Full coverage aims at every reachable overhang: the slider is Auto's
+           coverage: finMode === 'full' ? FIN.coverDefault : el('coverage').valueAsNumber / 100,
            // Auto places sway braces itself; in Draw they are clicked on by hand.
-           sway: finMode === 'auto' && el('sway').checked ? { on: true, ...swayOpts() } : undefined,
+           sway: autoLike() && el('sway').checked ? { on: true, ...swayOpts() } : undefined,
            // The clearances have to travel WITH the request: the build runs in a
            // Worker with its own copy of fins.js / prop.js, which never sees what
            // applyMaterial and the gap fields set on this page's copy (fins.js

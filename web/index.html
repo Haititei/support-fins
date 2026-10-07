@@ -206,15 +206,18 @@
       </select>
     </label>
     <label class="fld">
-        <span data-i18n="Placement">Placement</span>
-        <select id="fin-mode" title="Who places the support.">
-        <!-- Two modes only, on purpose. AUTO (fins.js mode 'auto') is the default and
-             does everything: a tined combined fin on each overhang face steep and flat
-             enough to grip, a plain breakaway prop under the shallow/curved ones that
-             can't take a fin. DRAW lets you place a fin by hand. The old fins-only
+      <span data-i18n="Placement">Placement</span>
+      <select id="fin-mode" title="Who places the support." data-i18n-title>
+        <!-- AUTO (fins.js mode 'auto') is the default and does everything: a tined
+             combined fin on each overhang face steep and flat enough to grip, a plain
+             breakaway prop under the shallow/curved ones that can't take a fin. FULL
+             COVERAGE ('full', fins/fill.js) is Auto plus walls under the red Auto left
+             bare -- more walls and plastic, every reachable overhang held, the rest
+             reported in the readout. DRAW lets you place a fin by hand. The old fins-only
              "Combined fin" mode was dropped -- it built nothing (and said nothing) on
              parts with no fin sites, which just read as broken. -->
         <option value="auto" data-i18n="Auto — place supports for me">Auto — Stützen automatisch platzieren</option>
+        <option value="full" data-i18n="Full coverage — every overhang">Vollständige Abdeckung — alle Überhänge</option>
         <option value="draw" data-i18n="Draw — place them by hand">Zeichnen — manuell platzieren</option>
       </select>
     </label>
