@@ -191,7 +191,6 @@ export default {
   "Drag the rings to turn it, or:": "Ringe zum Drehen ziehen, oder:",
   "Lay a face flat": "Fläche flach auflegen",
   "Click a face to lay it flat — Esc cancels": "Fläche anklicken zum Auflegen – Esc bricht ab",
-  "Click this, then click a face to set it flat on the bed. Off by default so a stray click can't re-lay the part.": "Hier klicken und dann eine Fläche anklicken, um sie flach aufs Druckbett zu legen.",
   "Show layers": "Schichten anzeigen",
   "Suggest orientation": "Ausrichtung vorschlagen",
   "Suggest orientation ▾": "Ausrichtung vorschlagen ▾",

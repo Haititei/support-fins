@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * Strength: the load arrow (a direction the part is pulled in use), its verdict
  * and the "turn to the strongest printable pose" button, plus the layer-line view.
@@ -153,7 +154,7 @@ export function updateLoadReadout() {
   const w = loadDir.clone().applyQuaternion(part.quaternion);
   const al = loadAlignment([w.x, w.y, w.z]);
   if (!al) { note.hidden = true; suggestBtn.hidden = true; return; }
-  note.textContent = al.text;
+  note.textContent = t(al.text);
   note.className = `load-verdict ${al.quality}`;
   note.hidden = false;
   // Offer a stronger pose only when this one isn't already good. Wired in the
