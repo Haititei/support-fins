@@ -214,6 +214,39 @@ over 7 layers. The printed numbers above still stand.
 | auto placement | up to 4 faces with bearings ≥ 60° apart, a rib per ~100 mm of face width, at the face's **tallest** columns | holds both axes; a rib at a gable's low end braces the half that wasn't moving |
 | manual | Draw mode: one click on an upright side; click a placed support to select it, Delete / "Remove selected" to take it out | |
 
+## Wall ribs (Full coverage) — `web/prop/brace.js`
+
+Not printed yet. The fill pass serves hands, hems and elbows with walls ~3 mm long and
+25–50 mm tall (Isaac's hands: 33 mm on a 0.4 × 1 mm footprint), a suspect in plates
+letting go. A cap on the ratio (closed PR #200) left the hands bare, so the wall stays
+and gets ribs at the plate. Only these numbers are new; the rest are the wall's own.
+
+| feature | value | rationale |
+|---|---|---|
+| when | fill walls over `maxShortAspect` (**6**) × their length, at stations whose floor is the plate | Auto's own short-wall limit; v1 lands nothing on the part (marks) |
+| where | up to 4: off each end along the line, off each face at the middle | each judged alone: a wall against a thigh keeps its open sides |
+| reach | `footRatio` × wall height (0.12; 4.2 mm on a 35 mm wall), halved while blocked, down to **1.5 mm** | the rule the foot already follows across the line |
+| rise | **50%** of the wall's height at the stem, and ≥ 1 mm under the tip taper | the contact, gap and tines are untouched |
+| thickness / flange | wall `th` (1.0); flange `baseH` (0.6) tall, `footMin` (1.6) either side | same as the wall it braces |
+| clearance | `sideClear` (0.35) off the part, out past the tip; off every other support (joined flanges allowed, as fill walls) | a fused rib doesn't break away |
+| order | after every fill wall is placed | ribs built as walls went in took plate the next walls needed (Isaac 12 → 10 walls) |
+
+## Joined walls and ties (Full coverage) — `web/fins/fill.js`, `web/prop/ties.js`
+
+Not printed yet. A figure's fill walls stood apart, each on its own ("all the fins become
+a mess"), and a 45° cleat sole needs walls down its slope that cross the one along it.
+
+| feature | value | rationale |
+|---|---|---|
+| joined walls | the fill's patch-by-patch pass may, as its last try, cross or meet another **fill** wall; never Auto's, never the part | one support with the wall it meets; the slope's walls were refused for touching it |
+| tie shape | zigzag of struts (a Warren truss) in the plane through both walls, from the plate at wall A up to B, back to A… | each strut starts on the plate or the strut below: nothing bridges |
+| strut slope | **55°** (`TIE.slope` = tan 55°) | steeper than the 45° a printer holds without support |
+| strut size | wall `th` (1.0) wide, **1.2 mm** deep measured straight up; ends run th/2 into each wall | overlapping solids, never flush |
+| which walls | fill walls ≥ **8 mm** tall, at stations on the plate, **2–12 mm** apart; closest pairs first, **2** ties a wall | under 2 mm the feet already meet; past 12 mm a strut is a wall of its own |
+| how high | to **70%** of the lower wall's height, and ≥ 1 mm under its tip taper | the contact, gap and tines are untouched |
+| clearance | `sideClear` (0.35) off the part (none inside it); off every support but its own two walls | a fused tie doesn't break away from the part |
+| order | after the ribs | ties don't take plate or room from walls or ribs |
+
 ## Naming
 
 Slant3D says "grip fins" once. Unrelated to the *grip fin* used elsewhere in Matthew's

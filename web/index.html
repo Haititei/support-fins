@@ -138,8 +138,9 @@
   <button class="btn sm" id="undo" title="Undo (⌘/Ctrl+Z)" disabled><span data-i18n="Undo">Undo</span></button>
   <button class="btn sm" id="redo" title="Redo (⇧⌘/Ctrl+Shift+Z)" disabled><span data-i18n="Redo">Redo</span></button>
   <p class="readout"><span id="rot-now">X 0° · Y 0° · Z 0°</span><span id="rot-delta"></span></p>
-  <p class="hint" data-i18n="Drag the rings to turn it, or:">Drag the rings to turn it, or:</p>
-  <button class="btn sm" id="lay-face" title="Click this, then click a face to set it flat on the bed. Off by default so a stray click can\'t re-lay the part." data-i18n-title data-i18n="Lay a face flat">Lay a face flat</button>
+  <p class="hint" id="rings-hint" data-i18n="Drag the rings to turn it, or:">Drag the rings to turn it, or:</p>
+  <button class="btn sm" id="lay-face"
+          title="Click this, then click a face to set it flat on the bed. Off by default so a stray click can't re-lay the part." data-i18n-title data-i18n="Lay a face flat">Lay a face flat</button>
   <!-- Automatic strength view: no input. The faint frames show how the print is
        layered (they stay horizontal while the part turns inside them), and the note
        says where this orientation is weak. A printed part splits across its layers,
@@ -148,6 +149,18 @@
     <label class="check layers-toggle" title="Show the horizontal print layers around the part.">
       <input type="checkbox" id="show-layers"><span data-i18n="Show layers">Show layers</span>
     </label>
+    <!-- The rings cover the part on a small screen (#53). Off hides them; the
+         buttons above and Lay a face flat still turn it. Remembered (optional). -->
+    <label class="check layers-toggle" title="The rotate rings around the part. Off hides them; Rotate 90°, Reset and Lay a face flat still turn the part.">
+      <input type="checkbox" id="show-rings" checked>Show rotate rings
+    </label>
+  </div>
+  <!-- Mouse navigation preset (#53): which button orbits / pans, to match the CAD
+       package the user's hands already know. ui/navigation.js; remembered (optional). -->
+  <div class="navview">
+    <label class="nav-pick">Mouse <select id="nav-preset"
+        aria-describedby="nav-hint"></select></label>
+    <p class="hint" id="nav-hint"></p>
   </div>
   <div class="suggest">
     <div class="suggest-head">

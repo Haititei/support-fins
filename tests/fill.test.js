@@ -62,22 +62,24 @@ Deno.test('fill: no added wall is inside the part', () => {
   assert(n === 0, `${n} fill vertices inside the part`);
 });
 
-Deno.test('fill: added walls keep sideClear off every other support, Auto\'s and each other (fused walls do not break away)', () => {
+Deno.test('fill: added walls keep sideClear off every other support, Auto\'s and each other (fused walls do not break away) -- a joined wall only off Auto\'s', () => {
   const box = (t, i) => [0, 1, 2].map((k) => Math.min(t[i][k], t[i + 1][k], t[i + 2][k]))
     .concat([0, 1, 2].map((k) => Math.max(t[i][k], t[i + 1][k], t[i + 2][k])));
   const pad = 0.3;   // a hair under PROP.sideClear (0.35)
   const touch = (b, o) => b[0] - pad <= o[3] && o[0] <= b[3] + pad && b[1] - pad <= o[4] && o[1] <= b[4] + pad
     && b[2] - pad <= o[5] && o[2] <= b[5] + pad;
   // every support as its own list of triangle boxes: Auto's as one, each fill wall apart
-  const walls = [[]];
+  const walls = [[]], joined = [false];
   for (let i = 0; i < auto.triangles.length; i += 3) walls[0].push(box(auto.triangles, i));
   for (const f of full.fins.filter((w) => w.fill)) {
     const [a, z] = f.triRanges[0], bs = [];
     for (let i = a; i < z; i += 3) bs.push(box(full.triangles, i));
     walls.push(bs);
+    joined.push(!!f.joined);
   }
   assert(walls.length > 2, 'needs two fill walls to check them against each other');
   for (let w = 1; w < walls.length; w++) for (let v = 0; v < w; v++) {
+    if (v > 0 && joined[w]) continue;   // crosses or meets a fill wall on purpose: one support with it
     for (const b of walls[w]) for (const o of walls[v]) assert(!touch(b, o), `fill wall ${w} within ${pad} mm of support ${v}`);
   }
 });
@@ -144,4 +146,39 @@ Deno.test('fill: drawnLine under=true follows the underside where the plain pick
   const mid = (l) => l[Math.floor(l.length / 2)][2];
   assert(Math.abs(mid(plain) - zs[1][0]) < 1, `plain pick: ${mid(plain).toFixed(2)}, top ${zs[1][0].toFixed(2)}`);
   assert(Math.abs(mid(under) - zs[0][0]) < 1, `under pick: ${mid(under).toFixed(2)}, underside ${zs[0][0].toFixed(2)}`);
+});
+
+Deno.test('fill: pass 2 walls a low ledge with a squat wall (stations under minHeight + gap used to be cut)', async () => {
+  // a 4 x 3 mm tab 1.5 mm over the plate off a block's side (a figure's cleat sole):
+  // under minHeight + gap (1.7), over the squat floor; Auto drops it as a sliver
+  const { block, buildTopology } = await import('./_util.js');
+  const pos = new Float32Array([...block(-10, 10, -10, 10, 0, 20), ...block(-2, 2, 9.99, 13, 1.5, 6)]);
+  const tab = buildTopology({ getAttribute: (k) => (k === 'position' ? { array: pos } : null) });
+  const id = [1, 0, 0, 0, 1, 0, 0, 0, 1];
+  const r = analyze(tab, 45, id);
+  const a = fins.buildFins(tab, r, id, { ...OPTS, mode: 'auto' });
+  const f = fins.buildFins(tab, r, id, { ...OPTS, mode: 'full' });
+  assert(a.props.length === 0, `precondition: Auto walls the tab (${a.props.length} walls)`);
+  const fw = f.props.filter((q) => q.fill);
+  assert(fw.length === 1 && fw[0].squat, `expected one squat fill wall, got ${fw.map((q) => `h${q.height.toFixed(1)}${q.squat ? ' squat' : ''}`).join(', ') || 'none'}`);
+});
+
+Deno.test('fill: tall fill walls are tied into a frame -- ties built, outside the part, under each wall\'s tip taper', async () => {
+  const { PROP } = await import('../web/prop.js');
+  const hex = loadModel('hexprism'), rot30 = rotX(30), r = analyze(hex, 45, rot30);
+  const f = fins.buildFins(hex, r, rot30, { ...OPTS, mode: 'full' });
+  assert(f.fill.ties > 0, `the hexprism at X30 gets ties (${f.fill.ties})`);
+  let struts = 0;
+  for (const w of f.fins.filter((q) => q.fill)) {
+    // a wall's ranges: the wall, then its ribs (if any), then its ties
+    const p = f.props.find((q) => q.fill && q.line === w.line);
+    for (const [a, z] of w.triRanges.slice(p.braces ? 2 : 1)) {
+      const tie = f.triangles.slice(a, z);
+      struts += tie.length;
+      assert(insideCount(hex, rot30, r.offset, tie) === 0, 'a tie vertex inside the part');
+      const top = Math.max(...tie.map((v) => v[2])), wallTop = Math.min(...w.line.map((s) => s[2]));
+      assert(top <= wallTop - PROP.gap - PROP.tipH - 1 + 1e-6, `tie top ${top.toFixed(2)} into the tip taper (wall top ${wallTop.toFixed(2)})`);
+    }
+  }
+  assert(struts > 0, 'the ties are in the walls\' triangle ranges');
 });

@@ -213,3 +213,39 @@ Deno.test('part foot: a floor just past MAX_DROP keeps the capped tilt, its corn
       `${down} down: lowest point ${z.toFixed(3)}, expected ${5 - 2.75 + PROP.footGap} (tilted MAX_DROP)`);
   }
 });
+
+Deno.test('part foot: where the floor is open plate the bottom stands on the plate, not footGap over it', () => {
+  // the base block under only the left half: the wall stands on the part there,
+  // and runs down to the plate past its edge -- lifted, that end floated 0.2 mm
+  // over the plate with nothing for the slicer to start it on (a figure's hands)
+  const half = new Float32Array([...block(-40, 0, -10, 10, 0, 5), ...block(-40, 40, -10, 10, 35, 39)]);
+  const r = drawnWall([-30, 0, 35], [30, 0, 35], half, 0);
+  assert(r.ok && r.partAttached, `expected a part-attached wall: ${r.reason}`);
+  const lowAt = (keep) => Math.min(...r.tris.filter(keep).map((p) => p[2]));
+  const plate = lowAt((p) => p[0] > 2), part = lowAt((p) => p[0] < -2);
+  assert(Math.abs(plate) < 1e-6, `over the plate the lowest point is ${plate.toFixed(3)}, expected 0`);
+  assert(Math.abs(part - 5.2) < 1e-6, `over the part the lowest point is ${part.toFixed(3)}, expected 5.2`);
+});
+
+Deno.test('part foot: a station over a sloped toe with plate under one side keeps footGap on both sides', () => {
+  // a 45deg chamfer whose toe (z 0) sits 0.45 mm off the wall's centre: the floor
+  // under the near side is plate, under the far side the slope. Lifting only the
+  // side over part left the tilted bottom 0.07 mm off the slope near the toe
+  const zAt = (y) => Math.max(0.001, y + 0.45);
+  const tris = new Float32Array([...ramp(-40, 40, -0.45, 3, zAt), ...block(-40, 40, -10, 10, 35, 39)]);
+  const r = drawnWall([-30, 0, 35], [30, 0, 35], tris, 0);
+  assert(r.ok && r.partAttached, `expected a part-attached wall: ${r.reason}`);
+  // along each station's bottom edge, side to side (its vertices are only at the sides)
+  const at = new Map();
+  for (const p of r.tris) if (p[2] < 6) { const k = p[0].toFixed(2); (at.get(k) ?? at.set(k, []).get(k)).push(p); }
+  let lo = Infinity;
+  for (const vs of at.values()) {
+    const a = vs.reduce((m, p) => (p[1] < m[1] ? p : m)), b = vs.reduce((m, p) => (p[1] > m[1] ? p : m));
+    if (b[1] - a[1] < 0.5) continue;
+    for (let t = 0; t <= 1; t += 0.02) {
+      const y = a[1] + (b[1] - a[1]) * t;
+      if (y >= -0.45) lo = Math.min(lo, a[2] + (b[2] - a[2]) * t - zAt(y));
+    }
+  }
+  assert(lo > PROP.footGap - 0.05, `bottom ${lo.toFixed(3)} mm off the slope, expected about footGap ${PROP.footGap}`);
+});
