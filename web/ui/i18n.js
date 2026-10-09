@@ -23,7 +23,7 @@ function initialLang() {
     const q = new URLSearchParams(location.search).get('lang')?.trim().toLowerCase().slice(0, 2);
     if (q && SUPPORTED_LANGS[q]) setStoredLang(q);
   } catch {}
-  return getStoredLang() || (navigator.language?.startsWith('de') ? 'de' : 'en');
+  return getStoredLang() || 'en';
 }
 
 export let currentLang = initialLang();
