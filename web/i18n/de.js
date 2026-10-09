@@ -1,9 +1,9 @@
 export default {
-  "Middle-drag orbits, Shift + middle-drag pans, wheel zooms.": "Mittlere Maustaste dreht Ansicht, Umschalt + mittlere Maustaste verschiebt, Mausrad zoomt.",
-  "Middle-drag orbits, Ctrl + middle-drag pans, wheel zooms.": "Mittlere Maustaste dreht Ansicht, Strg + mittlere Maustaste verschiebt, Mausrad zoomt.",
-  "Right-drag orbits, middle- or Ctrl + right-drag pans, wheel zooms.": "Rechtsklick dreht Ansicht, mittlere Maustaste oder Strg + Rechtsklick verschiebt, Mausrad zoomt.",
-  "Shift + middle-drag orbits, middle-drag pans, wheel zooms.": "Umschalt + mittlere Maustaste dreht Ansicht, mittlere Maustaste verschiebt, Mausrad zoomt.",
-  "Left-drag orbits, right-drag pans, wheel zooms.": "Linksklick dreht Ansicht, Rechtsklick verschiebt, Mausrad zoomt.",
+  "Middle-drag orbits, Shift + middle-drag pans, wheel zooms.": "Mittlere Maustaste ziehen dreht die Ansicht, Umschalt + mittlere Maustaste ziehen verschiebt, Mausrad zoomt.",
+  "Middle-drag orbits, Ctrl + middle-drag pans, wheel zooms.": "Mittlere Maustaste ziehen dreht die Ansicht, Strg + mittlere Maustaste ziehen verschiebt, Mausrad zoomt.",
+  "Right-drag orbits, middle- or Ctrl + right-drag pans, wheel zooms.": "Rechte Maustaste ziehen dreht die Ansicht, mittlere Maustaste oder Strg + rechte Maustaste ziehen verschiebt, Mausrad zoomt.",
+  "Shift + middle-drag orbits, middle-drag pans, wheel zooms.": "Umschalt + mittlere Maustaste ziehen dreht die Ansicht, mittlere Maustaste ziehen verschiebt, Mausrad zoomt.",
+  "Left-drag orbits, right-drag pans, wheel zooms.": "Linke Maustaste ziehen dreht die Ansicht, rechte Maustaste ziehen verschiebt, Mausrad zoomt.",
   "Default": "Standard",
   "Mouse": "Maus",
   "Show rotate rings": "Drehringe anzeigen",
@@ -224,6 +224,7 @@ export default {
   "The load runs along the layers — the strong direction. Good.": "Die Last verläuft entlang der Schichten — die stabile Richtung. Gut.",
   "The load partly crosses the layers.": "Die Last kreuzt die Schichten teilweise.",
   "The load pulls straight across the layers — where prints split first.": "Die Last zieht quer zu den Schichten — hier reißen Drucke zuerst.",
+  "This is about the strongest printable orientation for this load — a better-aligned pose wouldn’t sit on the bed.": "Das ist für diese Last etwa die stabilste druckbare Lage — eine besser ausgerichtete Lage stünde nicht auf dem Druckbett.",
 
   // Right Rail: Sections & Controls
   "Setup": "Grundeinstellungen",

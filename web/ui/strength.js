@@ -155,6 +155,7 @@ export function updateLoadReadout() {
   const al = loadAlignment([w.x, w.y, w.z]);
   if (!al) { note.hidden = true; suggestBtn.hidden = true; return; }
   note.textContent = t(al.text);
+  delete note.dataset.strongest;
   note.className = `load-verdict ${al.quality}`;
   note.hidden = false;
   // Offer a stronger pose only when this one isn't already good. Wired in the
@@ -227,6 +228,8 @@ el('load-clear').addEventListener('click', clearLoad);
 // lays the load most in-plane, but only among poses that actually sit on the bed,
 // so it can't produce the needle-tower. If the current pose is already about as
 // good as it gets, say so instead of turning to an equivalent orientation.
+const STRONGEST_NOTE = 'This is about the strongest printable orientation for this '
+  + 'load — a better-aligned pose wouldn’t sit on the bed.';
 el('load-suggest').addEventListener('click', () => {
   if (!part || !topology || !loadDir) return;
   const pose = suggestStrengthPose(topology, [loadDir.x, loadDir.y, loadDir.z], { threshold });
@@ -234,12 +237,20 @@ el('load-suggest').addEventListener('click', () => {
   const cur = loadAlignment([w.x, w.y, w.z]);
   const note = el('load-note');
   if (!pose || (cur && pose.cross >= cur.cross - 0.05)) {
-    note.textContent = 'This is about the strongest printable orientation for this '
-      + 'load — a better-aligned pose wouldn’t sit on the bed.';
+    note.textContent = t(STRONGEST_NOTE);
+    note.dataset.strongest = '1';
     note.className = `load-verdict ${cur ? cur.quality : 'mixed'}`;
     note.hidden = false;
     el('load-suggest').hidden = true;
     return;
   }
   applySuggestion(pose.rot);   // turns the part; shade() refreshes the verdict + button
+});
+
+// Re-word the load note in the new language: the "already strongest" note stays
+// up if that's what it shows, otherwise the verdict for the current pose.
+window.addEventListener('languagechange', () => {
+  const note = el('load-note');
+  if (note.dataset.strongest && !note.hidden) note.textContent = t(STRONGEST_NOTE);
+  else updateLoadReadout();
 });
