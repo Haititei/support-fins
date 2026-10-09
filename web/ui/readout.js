@@ -35,6 +35,11 @@ function explainNoFins(b) {
         + 'stand on. Turn the bed pad on to seat it, or rotate until it sits '
         + 'down on a face or an edge';
   }
+  // Plate only (#218) emptied it: in any mode, that is the reason to name
+  if (b.skipped?.onPart) {
+    return 'part of the model sits under these overhangs, and Plate only is on — '
+         + 'untick it to stand supports on the part, or rotate';
+  }
   if (b.mode === 'prop') {
     const s = b.skipped ?? {};
     if (!b.rejected.sites) return 'no overhangs to prop in this orientation';
@@ -408,6 +413,18 @@ function updateFinReadout(built, ms) {
               + 'too shallow for a fin this way up. Tilt the part steeper so a fin can '
               + 'follow it (try Suggest orientation), or add a wall by hand.');
     }
+  }
+  // Plate only (#218) left these bare: say so, so the red isn't a mystery
+  const onPart = built.skipped?.onPart ?? 0;
+  if (onPart) {
+    const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || localStorage.getItem('support_fins_lang') === 'de';
+    help.push(isDe
+      ? `${onPart} ${onPart === 1 ? 'Stütze wurde' : 'Stützen wurden'} gekürzt oder weggelassen, weil `
+        + 'Bauteil unter dem Überhang liegt und „Nur Druckplatte“ aktiv ist. Deaktivieren Sie es, '
+        + 'um sie auf das Bauteil zu stellen.'
+      : `${onPart} support${onPart === 1 ? ' was' : 's were'} cut short or left off because part `
+        + 'of the model sits under the overhang and Plate only is on. Untick it to stand '
+        + 'them on the part.');
   }
   // Sway braces were asked for, so say what they did -- and why, if nothing.
   if (sw) {

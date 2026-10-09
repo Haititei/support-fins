@@ -84,7 +84,7 @@ export function noProps() {
   return {
     triangles: [], props: [], served: 0, volume: 0,
     skipped: { noLine: 0, wanders: 0, stub: 0, blocked: 0,
-               degenerate: 0, buried: 0, weld: 0, sliver: 0 },
+               degenerate: 0, buried: 0, weld: 0, sliver: 0, onPart: 0 },
   };
 }
 
@@ -172,7 +172,12 @@ function buildPass(topo, result, rot, opts, raster) {
   // within a generation.
   let nextId = 0;
   const skipped = { noLine: 0, wanders: 0, stub: 0, blocked: 0,
-                    degenerate: 0, buried: 0, weld: 0, sliver: 0 };
+                    degenerate: 0, buried: 0, weld: 0, sliver: 0, onPart: 0 };
+  // Plate only (#218): every support stands on the plate. A line with part under it
+  // (the part-attached path's) is counted (onPart) and handed to the plate path,
+  // whose column probes trim the stations over the part and keep any stretch that
+  // stands on the plate -- never stilting through the part.
+  const plateOnly = opts.plateOnly === true;
   const v = [0, 0, 0];
 
   // The whole part, seated once, for the part-attached floor probe: the floor a
@@ -344,7 +349,9 @@ function buildPass(topo, result, rot, opts, raster) {
       // no longer a refusal: its wall is built and flagged inBore. Works on a COPY so
       // the plate path's own `line` is untouched.
       const tri0 = out.length;
-      const pa = buildPartAttached(line, partTris, topo, rot, off, out);
+      let pa = buildPartAttached(line, partTris, topo, rot, off, out);
+      // (Plate only: undo it and take the plate path, as a bed overhang would)
+      if (plateOnly && (pa.ok || pa.floored)) { out.length = tri0; skipped.onPart++; pa = {}; }
       if (pa.ok && patch.smallTube) {
         // A small tube's line is new to this path, so hold its wall to the same
         // measured clearance the plate path demands (see the sweep below): on
