@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * Hand-placed supports: the breakaway walls drawn in Draw mode (or the Suggest
  * "+ Add" augment) and sway braces stood with one click, their preview markers,
@@ -343,12 +344,7 @@ function placeSway(hit) {
  *  wall in the Suggest "+ Add" augment. */
 export function syncDrawControls() {
   el('draw-controls').hidden = !drawShown();
-  el('draw-hint').innerHTML = 'Click <strong>two points</strong> across an overhang '
-    + '— straight onto the red faces — to lay a breakaway wall along that line. '
-    + (el('sway').checked
-      ? 'Click an <strong>upright side</strong> once to stand a sway brace against it. '
-      : '')
-    + '<kbd>Esc</kbd> or right-click cancels.';
+  el('draw-hint').innerHTML = t('Click two points across an overhang — straight onto the red faces — to lay a breakaway wall along that line. Click an upright side once to stand a sway brace against it. Esc or right-click cancels.');
 }
 
 // Clear acts on the hand-drawn breakaway walls -- the thing both Draw and the

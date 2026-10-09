@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * Per-fin removal (Auto): click a fin to drop just that one.
  *
@@ -129,7 +130,7 @@ export function syncRemoveUI() {
   el('remove-fins-controls').hidden = !show;
   el('remove-fins-toggle').hidden = !show;
   el('remove-fins-toggle').classList.toggle('primary', removeMode);
-  el('remove-fins-toggle').textContent = removeMode ? 'Click a fin — Esc done' : 'Remove fins';
+  el('remove-fins-toggle').textContent = removeMode ? 'Click a fin — Esc done' : t('Remove fins');
   // Gate on removedIds (fins removed in THIS orientation), not the global
   // removedSigs -- otherwise a removal made in another pose shows a Restore button
   // that maps to nothing here (and whose tooltip promises "this orientation").
@@ -238,3 +239,5 @@ el('restore-fins').addEventListener('click', () => {
   rebuildFinMesh();
   syncRemoveUI();
 });
+
+window.addEventListener('languagechange', () => { if (typeof syncRemoveUI === 'function') syncRemoveUI(); });

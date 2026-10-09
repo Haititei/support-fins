@@ -1,3 +1,4 @@
+import { t, tn } from './i18n.js';
 /**
  * Suggest orientation: rank a few printable poses, list them with their fin count
  * and the "no support" / "bores clean" verdicts, and turn the part on a click.
@@ -56,12 +57,12 @@ function noSupportVerdict(c) {
     const strengthCaveat = lv?.posture === 'weak'
       ? ` It prints tall, though, the weaker direction, so check the Strength arrow if it bears a load.`
       : '';
-    return { tier: 'free', badge: 'No support',
-      note: `This way up it needs no fins, 0 g.${roughCaveat}${strengthCaveat}` };
+    return { tier: 'free', badge: t('No support'),
+      note: `${t('This way up it needs no fins, 0 g.')}${roughCaveat}${strengthCaveat}` };
   }
   if ((c.bore ?? 0) === 0 && suggestCurBore > 0) {
     const grams = (c.volume ?? 0) * materialDensity / 1000;
-    return { tier: 'holeclean', badge: 'Bores clean',
+    return { tier: 'holeclean', badge: t('Bores clean'),
       note: `This way up the bores point up, so there's no support to pull out of a hole `
           + `(${fmtGrams(grams)} g of fins, all on the outside).` };
   }
@@ -75,12 +76,12 @@ function renderSuggestions() {
     const row = document.createElement('button');
     row.className = 'btn suggest-row';
     const point = c.seating === 'point';
-    const overs = c.walls === 0 ? 'no fins' : `${c.walls} fin${c.walls === 1 ? '' : 's'}`;
+    const overs = c.walls === 0 ? t('no fins') : tn('{n} fin', '{n} fins', c.walls);
     // Rough holes = the small hole/slot/bore-top overhangs this pose leaves
     // unsupported (dropped slivers). Showing it is what makes a hole-friendly
     // pose legible: "Best · 12 rough" over "#3 · 561".
     const rough = c.holes ?? 0;
-    const roughTxt = rough ? ` · ${rough} rough` : '';
+    const roughTxt = rough ? ` · ${tn('{n} rough hole', '{n} rough holes', rough)}` : '';
     // A support-free pose is the headline outcome, not a footnote — badge it green
     // instead of letting it read as a dull "no overhangs → 0 fins".
     const verdict = point ? null : noSupportVerdict(c);
@@ -91,9 +92,9 @@ function renderSuggestions() {
     const badge = verdict?.tier === 'holeclean' ? ` <span class="sr-badge">${verdict.badge}</span>` : '';
     // One tight line per pose: rank · height · fins · rough holes. Bed area was
     // dropped to fit -- height already stands in for how it sits.
-    const tail = point ? ' · can’t print (on a point)' : roughTxt;
+    const tail = point ? ` · ${t('can’t print (on a point)')}` : roughTxt;
     row.innerHTML =
-      `<span class="sr-rank">${i === 0 ? 'Best' : `#${i + 1}`}</span>` +
+      `<span class="sr-rank">${i === 0 ? t('Best') : `#${i + 1}`}</span>` +
       `<span class="sr-line">${c.height.toFixed(0)} mm · ${overs}${tail}${badge}</span>`;
     if (point) row.classList.add('bad');
     if (verdict?.tier === 'free') row.classList.add('free');
@@ -132,7 +133,7 @@ export function clearSuggestionMark() {
 el('suggest-orient').addEventListener('click', () => {
   if (!part || !topology) return;
   const btn = el('suggest-orient');
-  btn.disabled = true; btn.textContent = 'Ranking…';
+  btn.disabled = true; btn.textContent = t('Ranking…');
   // let the button repaint before the (up to ~1s) solve blocks the thread
   requestAnimationFrame(() => requestAnimationFrame(() => {
     try {
@@ -150,9 +151,10 @@ el('suggest-orient').addEventListener('click', () => {
       el('suggest-body').hidden = false;
       if (!candidates.length || confidence === 'none') {
         el('suggest-list').hidden = true;
+        const isDe = (typeof currentLang !== 'undefined' && currentLang === 'de') || (typeof localStorage !== 'undefined' && localStorage.getItem('support_fins_lang') === 'de');
         el('suggest-note').textContent = confidence === 'none'
-          ? 'No printable orientation: this part balances on a point at every angle.'
-          : 'Nothing to suggest for this part.';
+          ? (isDe ? 'Keine druckbare Ausrichtung: Dieses Bauteil balanciert in jedem Winkel auf einem Punkt.' : 'No printable orientation: this part balances on a point at every angle.')
+          : (isDe ? 'Keine Vorschläge für dieses Bauteil.' : 'Nothing to suggest for this part.');
       } else {
         renderSuggestions();
         // Lead with the win when the best pose needs no support (or clears every
@@ -163,12 +165,12 @@ el('suggest-orient').addEventListener('click', () => {
           note.textContent = verdict.note;
           note.className = 'hint good';
         } else {
-          note.textContent = 'Click a pose to turn the part.';
+          note.textContent = t('Click a pose to turn the part.');
           note.className = 'hint';
         }
       }
     } finally {
-      btn.disabled = false; btn.textContent = 'Suggest orientation';
+      btn.disabled = false; btn.textContent = t('Suggest orientation');
     }
   }));
 });
@@ -183,3 +185,5 @@ el('suggest-toggle').addEventListener('click', () => {
   tog.title = next ? 'Collapse' : 'Show';
   el('suggest-body').hidden = !next;
 });
+
+window.addEventListener('languagechange', () => { const btn = el('suggest-orient'); if (btn) btn.textContent = btn.classList.contains('open') ? t('Suggest orientation ▾') : t('Suggest orientation'); });

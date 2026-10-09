@@ -1,3 +1,31 @@
+
+const PLUGIN_TRANSLATIONS = {
+  'OrcaSlicer': {
+    install: 'Plugins ▸ Plugin installieren, .py-Datei auswählen und aktivieren. Druckeinstellungen ▸ Erweitert ▸ Sonstige ▸ Slicing-Pipeline-Plugin ▸ Plugin hinzufügen ▸ Support Fins. Slicen; Sicherheitsabfragen beim ersten Slicen mit Ja bestätigen.'
+  },
+  'PrusaSlicer': {
+    install: 'Entpacken, com.printfins.support-fins in den lua-Ordner neben PrusaSlicer.ini kopieren, neu starten. Menü Support Fins ▸ Finne hinzufügen: Neigungswinkel anpassen und Finne 0.2 mm unter das Bauteil schieben. Größe über Finnenhöhe anpassen, nicht über das Skalierwerkzeug.'
+  },
+  'Cura': {
+    install: '.curapackage auf Cura ziehen und neu starten. Bauteil auswählen, Erweiterungen ▸ Support Fins ▸ Support Fins hinzufügen.'
+  },
+  'Fusion': {
+    install: 'Entpacken. Dienstprogramme ▸ Zusatzmodule ▸ Skripte und Zusatzmodule ▸ + ▸ Ordner wählen, Ausführen (beim Start ausführen anhaken). Volumenkörper ▸ Erstellen ▸ Support Fins einfügen.'
+  },
+  'Blender': {
+    install: 'Bearbeiten ▸ Einstellungen ▸ Erweiterungen ▸ Aus Datei installieren, Zip wählen. Seitenleiste (N) ▸ Support Fins ▸ Hinzufügen.'
+  },
+  'FreeCAD': {
+    install: 'In den Mod-Ordner des FreeCAD-Benutzerverzeichnisses entpacken (Hilfe ▸ Über FreeCAD zeigt den Pfad) und neu starten. Werkzeugleiste ▸ Support Fins hinzufügen.'
+  },
+  'Onshape': {
+    install: 'Beliebiges Part Studio ▸ Benutzerdefinierte Features ▸ Hinzufügen ▸ Fin Supports Dokument ▸ Support-Fins FS, dann das Bauteil auswählen.'
+  },
+  'Command line': {
+    install: 'node support-fins.mjs part.stl (oder deno run -RW support-fins.mjs part.stl) → part-fins.3mf, Bauteil + Finnen. --help zeigt alle Optionen.'
+  }
+};
+import { t } from './i18n.js';
 // Plugins menu: the topbar's download list for every slicer / CAD plugin.
 //
 // The files are the rolling `plugins-latest` GitHub release, rebuilt by
@@ -12,7 +40,6 @@
 // Cura, Blender and FreeCAD carry a V8 library, so they ship one file per
 // computer; one "Your computer" picker (guessed from the browser) chooses for all.
 import { el } from './dom.js';
-import { t } from './i18n.js';
 
 const REPO = 'gittrahan/support-fins';
 const TAG = 'plugins-latest';
@@ -174,7 +201,7 @@ function render() {
     body.className = 'plugin-body';
     const needs = document.createElement('div');
     needs.className = 'plugin-needs';
-    needs.textContent = file === null ? t('No build for {name}', { name: t(COMPUTERS.find(([k]) => k === c)[1]) }) : t(p.needs);
+needs.textContent = file === null ? t('No build for {name}', { name: t(COMPUTERS.find(([k]) => k === c)[1]) }) : t(p.needs);
     body.append(needs);
     if (p.note) {
       const note = document.createElement('div');
@@ -191,7 +218,7 @@ function render() {
     if (file !== null) {
       const how = document.createElement('div');
       how.className = 'plugin-how';
-      how.textContent = t(p.install);
+how.textContent = t(p.install);
       body.append(how);
     }
     row.append(head, body);

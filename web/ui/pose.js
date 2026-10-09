@@ -1,3 +1,4 @@
+import { t } from './i18n.js';
 /**
  * The pose: the rotate gizmo, the 90-degree and reset buttons, and "Lay a face
  * flat" with its hovered-face highlight. app.js's pointer dispatch calls
@@ -143,8 +144,8 @@ export function cancelLay() {
 }
 
 function syncLayUI() {
-  el('lay-face').textContent = layPlacing ? 'Click a face to lay it flat — Esc cancels'
-    : 'Lay a face flat';
+  el('lay-face').textContent = layPlacing ? t('Click a face to lay it flat — Esc cancels')
+    : t('Lay a face flat');
   el('lay-face').classList.toggle('active', layPlacing);
 }
 
@@ -252,3 +253,5 @@ export function layClick(e) {
   cancelLay();            // one-shot: disarm after a lay so the next click is safe
   shade();
 }
+
+window.addEventListener('languagechange', () => { el('lay-face').textContent = layPlacing ? t(t('Click a face to lay it flat — Esc cancels')) : t(t('Lay a face flat')); });
