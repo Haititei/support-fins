@@ -1,4 +1,13 @@
 export default {
+  "Middle-drag orbits, Shift + middle-drag pans, wheel zooms.": "Mittlere Maustaste dreht Ansicht, Umschalt + mittlere Maustaste verschiebt, Mausrad zoomt.",
+  "Middle-drag orbits, Ctrl + middle-drag pans, wheel zooms.": "Mittlere Maustaste dreht Ansicht, Strg + mittlere Maustaste verschiebt, Mausrad zoomt.",
+  "Right-drag orbits, middle- or Ctrl + right-drag pans, wheel zooms.": "Rechtsklick dreht Ansicht, mittlere Maustaste oder Strg + Rechtsklick verschiebt, Mausrad zoomt.",
+  "Shift + middle-drag orbits, middle-drag pans, wheel zooms.": "Umschalt + mittlere Maustaste dreht Ansicht, mittlere Maustaste verschiebt, Mausrad zoomt.",
+  "Left-drag orbits, right-drag pans, wheel zooms.": "Linksklick dreht Ansicht, Rechtsklick verschiebt, Mausrad zoomt.",
+  "Default": "Standard",
+  "Mouse": "Maus",
+  "Show rotate rings": "Drehringe anzeigen",
+  "The rotate rings around the part. Off hides them; Rotate 90°, Reset and Lay a face flat still turn the part.": "Die Drehringe um das Bauteil. Aus blendet sie aus; 90° drehen, Zurücksetzen und Fläche flach auflegen drehen das Bauteil weiterhin.",
   "times and filament from {profile}; yours will differ": "Druckzeit und Materialverbrauch geschätzt mit {profile}; tatsächliche Werte hängen von Ihrem Drucker ab.",
   "Download": "Herunterladen",
 "The filament you'll print in. PETG fuses to supports much harder than PLA, so PETG loosens the gaps, shrinks the tine bite, and gives the bed pad a gap instead of a bite. PLA keeps the tighter grip.": "Das Filament, mit dem gedruckt wird. PETG verschmilzt deutlich fester mit Stützen als PLA, daher vergrößert PETG die Abstände, verringert den Eingriff der Zacken und versieht den Stützfuß mit einem Spalt statt Verankerung. PLA behält den festeren Halt.",

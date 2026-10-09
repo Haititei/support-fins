@@ -151,14 +151,14 @@
     </label>
     <!-- The rings cover the part on a small screen (#53). Off hides them; the
          buttons above and Lay a face flat still turn it. Remembered (optional). -->
-    <label class="check layers-toggle" title="The rotate rings around the part. Off hides them; Rotate 90°, Reset and Lay a face flat still turn the part.">
-      <input type="checkbox" id="show-rings" checked>Show rotate rings
+    <label data-i18n-title class="check layers-toggle" title="The rotate rings around the part. Off hides them; Rotate 90°, Reset and Lay a face flat still turn the part.">
+      <input type="checkbox" id="show-rings" checked><span data-i18n="Show rotate rings">Show rotate rings</span>
     </label>
   </div>
   <!-- Mouse navigation preset (#53): which button orbits / pans, to match the CAD
        package the user's hands already know. ui/navigation.js; remembered (optional). -->
   <div class="navview">
-    <label class="nav-pick">Mouse <select id="nav-preset"
+    <label class="nav-pick"><span data-i18n="Mouse">Mouse</span> <select id="nav-preset"
         aria-describedby="nav-hint"></select></label>
     <p class="hint" id="nav-hint"></p>
   </div>
